@@ -585,6 +585,99 @@ async function runSqlMigrations(): Promise<string> {
   }
 }
 
+// Force reset and re-seed database with synchronized pristine mock data
+async function runSqlReset(): Promise<string> {
+  const seedSales = generateMockSales();
+  if (!db) {
+    const defaultDb = {
+      ingredients: DEFAULT_INGREDIENTS,
+      products: DEFAULT_PRODUCTS,
+      sales: seedSales,
+      expenses: DEFAULT_EXPENSES,
+      wastage: DEFAULT_WASTAGE,
+      storeSettings: {
+        storeName: "BFC Geprek Aruji",
+        storeTagline: "Berkah Fried Chicken",
+        storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
+        storePhone: "0812-3456-7890"
+      },
+      users: [
+        { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin", name: "Adam Superadmin" },
+        { id: "user-2", username: "kasir", password: "kasir123", role: "kasir", name: "Siti Kasir Utama" },
+        { id: "user-3", username: "owner", password: "owner123", role: "owner", name: "Pak Hartono Owner" }
+      ]
+    };
+    saveFallbackDb(defaultDb);
+    return "Reset local fallback database berhasil dilakukan dengan data seed baru.";
+  }
+
+  try {
+    const collectionsToClear = ["users", "ingredients", "products", "sales", "expenses", "wastage"];
+    
+    for (const colName of collectionsToClear) {
+      try {
+        const colRef = collection(db, colName);
+        const snapshot = await getDocs(colRef);
+        for (const docSnap of snapshot.docs) {
+          await deleteDoc(doc(db, colName, docSnap.id));
+        }
+      } catch (e: any) {
+        console.warn(`Failed to clear collection ${colName}:`, e.message);
+      }
+    }
+
+    // Clear storeSettings
+    try {
+      await deleteDoc(doc(db, "storeSettings", "store"));
+    } catch (err) {
+      console.warn("Failed to delete store settings on reset:", err);
+    }
+
+    // Re-seed Users
+    const PRESET_USERS = [
+      { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin", name: "Adam Superadmin" },
+      { id: "user-2", username: "kasir", password: "kasir123", role: "kasir", name: "Siti Kasir Utama" },
+      { id: "user-3", username: "owner", password: "owner123", role: "owner", name: "Pak Hartono Owner" }
+    ];
+
+    await saveCollection("users", PRESET_USERS);
+    await saveCollection("ingredients", DEFAULT_INGREDIENTS);
+    await saveCollection("products", DEFAULT_PRODUCTS);
+    await saveCollection("sales", seedSales);
+    await saveCollection("expenses", DEFAULT_EXPENSES);
+    await saveCollection("wastage", DEFAULT_WASTAGE);
+
+    await saveStoreSettings({
+      storeName: "BFC Geprek Aruji",
+      storeTagline: "Berkah Fried Chicken",
+      storeAddress: "Jl. Papa Dada Krispi No. 99, Jakarta Barat",
+      storePhone: "0812-3456-7890"
+    });
+
+    // Sync fallback file as well
+    const defaultDb = {
+      ingredients: DEFAULT_INGREDIENTS,
+      products: DEFAULT_PRODUCTS,
+      sales: seedSales,
+      expenses: DEFAULT_EXPENSES,
+      wastage: DEFAULT_WASTAGE,
+      storeSettings: {
+        storeName: "BFC Geprek Aruji",
+        storeTagline: "Berkah Fried Chicken",
+        storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
+        storePhone: "0812-3456-7890"
+      },
+      users: PRESET_USERS
+    };
+    saveFallbackDb(defaultDb);
+
+    return "Database Firestore berhasil di-reset total dan di-seed dengan sukses.";
+  } catch (err: any) {
+    console.error("Firebase reset error:", err.message);
+    throw new Error(`Gagal mereset Firestore: ${err.message}`);
+  }
+}
+
 // ----------------------------------------------------
 // API ROUTES
 // ----------------------------------------------------
@@ -625,6 +718,16 @@ app.post("/api/db/test", async (req, res) => {
 app.post("/api/db/migrate", async (req, res) => {
   try {
     const msg = await runSqlMigrations();
+    res.json({ success: true, message: msg });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Run DB Reset
+app.post("/api/db/reset", async (req, res) => {
+  try {
+    const msg = await runSqlReset();
     res.json({ success: true, message: msg });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });

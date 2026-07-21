@@ -343,13 +343,13 @@ export function initializeDb(force = false): void {
     localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(DEFAULT_INGREDIENTS));
   }
   if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.SALES)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify(generateMockSales()));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify([]));
   }
   if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.EXPENSES)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.EXPENSES, JSON.stringify(DEFAULT_EXPENSES));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.EXPENSES, JSON.stringify([]));
   }
   if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.WASTAGE)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(DEFAULT_WASTAGE));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify([]));
   }
 }
 
