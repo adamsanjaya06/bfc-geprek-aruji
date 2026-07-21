@@ -66,66 +66,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
     }
   };
 
-  const handleQuickLogin = async (role: "superadmin" | "kasir" | "owner") => {
-    let u = "";
-    let p = "";
-    if (role === "superadmin") {
-      u = "superadmin";
-      p = "admin123";
-    } else if (role === "kasir") {
-      u = "kasir";
-      p = "kasir123";
-    } else if (role === "owner") {
-      u = "owner";
-      p = "owner123";
-    }
-    setUsername(u);
-    setPassword(p);
-    setErrorMessage("");
-    
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: u, password: p }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success) {
-        onLoginSuccess(data.user);
-      } else {
-        setErrorMessage(data.message || "Gagal masuk. Periksa kembali username & password.");
-      }
-    } catch (err) {
-      // Fallback
-      let presets = [
-        { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin" as const, name: "Adam Superadmin" },
-        { id: "user-2", username: "kasir", password: "kasir123", role: "kasir" as const, name: "Siti Kasir Utama" },
-        { id: "user-3", username: "owner", password: "owner123", role: "owner" as const, name: "Pak Hartono Owner" }
-      ];
-      try {
-        const saved = localStorage.getItem("pos_fc_users");
-        if (saved) presets = JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
-      const matched = presets.find(usr => usr.username.toLowerCase() === u.toLowerCase() && usr.password === p);
-      if (matched) {
-        onLoginSuccess({
-          id: matched.id,
-          username: matched.username,
-          name: matched.name,
-          role: matched.role
-        });
-      } else {
-        setErrorMessage("Kredensial login luring salah.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-bento-bg flex flex-col justify-center items-center p-6 select-none relative overflow-hidden">
       {/* Background ambient light effects */}
@@ -205,42 +145,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        {/* Quick Login Section */}
-        <div className="mt-6 pt-6 border-t border-stone-100">
-          <p className="text-[10px] font-extrabold uppercase tracking-widest text-bento-text-muted text-center mb-3">
-            Masuk Cepat
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              id="quick-login-kasir"
-              type="button"
-              disabled={isLoading}
-              onClick={() => handleQuickLogin("kasir")}
-              className="px-2.5 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl border border-blue-100 text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center disabled:opacity-50"
-            >
-              Kasir
-            </button>
-            <button
-              id="quick-login-owner"
-              type="button"
-              disabled={isLoading}
-              onClick={() => handleQuickLogin("owner")}
-              className="px-2.5 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl border border-amber-100 text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center disabled:opacity-50"
-            >
-              Owner
-            </button>
-            <button
-              id="quick-login-admin"
-              type="button"
-              disabled={isLoading}
-              onClick={() => handleQuickLogin("superadmin")}
-              className="px-2.5 py-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl border border-purple-100 text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center disabled:opacity-50"
-            >
-              Admin
-            </button>
-          </div>
-        </div>
 
         <div className="mt-8 text-center text-[10px] font-bold text-bento-text-muted">
           <span>ChickenPOS v1.0.0 • Sistem Informasi Kasir Terenkripsi</span>

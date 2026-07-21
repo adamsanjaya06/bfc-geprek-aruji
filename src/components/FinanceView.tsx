@@ -32,14 +32,23 @@ import {
 } from "../utils/db";
 import { getStoreSettings } from "./SettingsView";
 
-export default function FinanceView() {
-  // State variables
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [wastages, setWastages] = useState<Wastage[]>([]);
+interface FinanceViewProps {
+  sales: Sale[];
+  products: Product[];
+  ingredients: Ingredient[];
+  expenses: Expense[];
+  wastages: Wastage[];
+  onFinanceUpdate: () => void;
+}
 
+export default function FinanceView({
+  sales,
+  products,
+  ingredients,
+  expenses,
+  wastages,
+  onFinanceUpdate,
+}: FinanceViewProps) {
   // Expenses Form states
   const [expDescription, setExpDescription] = useState("");
   const [expCategory, setExpCategory] = useState<Expense["category"]>("listrik");
@@ -52,19 +61,6 @@ export default function FinanceView() {
   const [timeRange, setTimeRange] = useState<"today" | "week" | "month" | "all">("today");
   const [expenseSearch, setExpenseSearch] = useState("");
   const [expenseFilterCategory, setExpenseFilterCategory] = useState<string>("Semua");
-
-  // Load database values on mount
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    setSales(getSales());
-    setProducts(getProducts());
-    setIngredients(getIngredients());
-    setExpenses(getExpenses());
-    setWastages(getWastage());
-  };
 
   // Helper: Format Rupiah (IDR)
   const formatIDR = (num: number) => {
@@ -152,7 +148,7 @@ export default function FinanceView() {
 
     const updatedExpenses = [newExpense, ...expenses];
     saveExpenses(updatedExpenses);
-    setExpenses(updatedExpenses);
+    onFinanceUpdate();
 
     // Reset Form
     setExpDescription("");
@@ -169,7 +165,7 @@ export default function FinanceView() {
     if (window.confirm("Apakah Anda yakin ingin menghapus catatan pengeluaran ini?")) {
       const updatedExpenses = expenses.filter(e => e.id !== id);
       saveExpenses(updatedExpenses);
-      setExpenses(updatedExpenses);
+      onFinanceUpdate();
     }
   };
 

@@ -337,10 +337,10 @@ const DEFAULT_WASTAGE: Wastage[] = [
 
 export function initializeDb(force = false): void {
   if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.PRODUCTS)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.PRODUCTS, JSON.stringify(DEFAULT_PRODUCTS));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
   }
   if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.INGREDIENTS)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(DEFAULT_INGREDIENTS));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify([]));
   }
   if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.SALES)) {
     localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify([]));

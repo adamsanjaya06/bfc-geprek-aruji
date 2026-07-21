@@ -20,9 +20,11 @@ import {
   saveProducts, 
   saveIngredients, 
   initializeDb,
-  syncWithBackend
+  syncWithBackend,
+  getExpenses,
+  getWastage
 } from "./utils/db";
-import { Product, Ingredient, Sale, User } from "./types";
+import { Product, Ingredient, Sale, User, Expense, Wastage } from "./types";
 import { Clock, AlertTriangle, Menu } from "lucide-react";
 import { getStoreSettings } from "./components/SettingsView";
 
@@ -44,6 +46,8 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [wastages, setWastages] = useState<Wastage[]>([]);
   
   // Navigation states with localStorage persistence
   const [currentTab, setCurrentTabState] = useState<string>(() => {
@@ -112,6 +116,8 @@ export default function App() {
     setProducts(getProducts());
     setIngredients(getIngredients());
     setSales(getSales());
+    setExpenses(getExpenses());
+    setWastages(getWastage());
     setStoreSettings(getStoreSettings());
   };
 
@@ -191,7 +197,14 @@ export default function App() {
         );
       case "finance":
         return (
-          <FinanceView />
+          <FinanceView
+            sales={sales}
+            products={products}
+            ingredients={ingredients}
+            expenses={expenses}
+            wastages={wastages}
+            onFinanceUpdate={refreshDbStates}
+          />
         );
       case "sales":
         return (
