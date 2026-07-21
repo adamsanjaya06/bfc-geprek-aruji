@@ -1,0 +1,85 @@
+{
+  "collections": {
+    "products": {
+      "description": "Products list with recipes",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "category": "string",
+        "price": "number",
+        "image": "string",
+        "isAvailable": "boolean",
+        "recipe": "array"
+      }
+    },
+    "ingredients": {
+      "description": "Raw ingredients list and stock",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "stock": "number",
+        "unit": "string",
+        "minStock": "number",
+        "cost": "number"
+      }
+    },
+    "sales": {
+      "description": "Point of Sale transactions",
+      "fields": {
+        "id": "string",
+        "invoiceNumber": "string",
+        "date": "string",
+        "items": "array",
+        "subtotal": "number",
+        "tax": "number",
+        "total": "number",
+        "paymentAmount": "number",
+        "changeAmount": "number",
+        "cashierName": "string"
+      }
+    },
+    "expenses": {
+      "description": "Store expenses",
+      "fields": {
+        "id": "string",
+        "date": "string",
+        "description": "string",
+        "category": "string",
+        "amount": "number"
+      }
+    },
+    "wastage": {
+      "description": "Ingredient wastage log",
+      "fields": {
+        "id": "string",
+        "date": "string",
+        "ingredientId": "string",
+        "ingredientName": "string",
+        "quantity": "number",
+        "unit": "string",
+        "costPerUnit": "number",
+        "totalCost": "number",
+        "reason": "string"
+      }
+    },
+    "storeSettings": {
+      "description": "Store identity settings",
+      "fields": {
+        "storeName": "string",
+        "storeTagline": "string",
+        "storeAddress": "string",
+        "storePhone": "string"
+      }
+    },
+    "users": {
+      "description": "Application operators",
+      "fields": {
+        "id": "string",
+        "username": "string",
+        "password": "string",
+        "role": "string",
+        "name": "string"
+      }
+    }
+  }
+}
