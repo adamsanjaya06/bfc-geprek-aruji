@@ -373,31 +373,210 @@ async function saveStoreSettings(settings: any): Promise<void> {
   }
 }
 
+// Default Expenses & Wastage Seeds
+const DEFAULT_EXPENSES = [
+  {
+    id: "exp-1",
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Pembayaran Listrik Toko Bulanan",
+    category: "listrik",
+    amount: 1200000,
+  },
+  {
+    id: "exp-2",
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Pengisian Tabung Gas 12kg (3 tabung)",
+    category: "gas",
+    amount: 210000,
+  },
+  {
+    id: "exp-3",
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Gaji Karyawan Shift Pagi & Malam",
+    category: "gaji",
+    amount: 3500000,
+  },
+  {
+    id: "exp-4",
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Biaya Kebersihan & Keamanan RW",
+    category: "lainnya",
+    amount: 150000,
+  },
+];
+
+const DEFAULT_WASTAGE = [
+  {
+    id: "wast-1",
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    ingredientId: "ing-1",
+    ingredientName: "Ayam Potong Segar",
+    quantity: 5,
+    unit: "pcs",
+    costPerUnit: 6000,
+    totalCost: 30000,
+    reason: "Ayam dibuang karena sudah lewat hari / basi",
+  },
+  {
+    id: "wast-2",
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    ingredientId: "ing-9",
+    ingredientName: "Kentang Beku Slices",
+    quantity: 1.5,
+    unit: "kg",
+    costPerUnit: 22000,
+    totalCost: 33000,
+    reason: "Kentang mencair dan tidak layak goreng",
+  },
+];
+
+// Helper to generate dynamic mock transactions for the last 7 days on server-side
+function generateMockSales() {
+  const salesList = [];
+  const baseTime = new Date();
+  let invoiceCounter = 1001;
+
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(baseTime);
+    day.setDate(baseTime.getDate() - i);
+    
+    const numSales = Math.floor(Math.random() * 5) + 3;
+    for (let s = 0; s < numSales; s++) {
+      const saleHour = 10 + Math.floor(Math.random() * 11);
+      const saleMin = Math.floor(Math.random() * 60);
+      const saleTime = new Date(day);
+      saleTime.setHours(saleHour, saleMin, 0);
+
+      const cart = [];
+      const prodCount = Math.floor(Math.random() * 3) + 1;
+      const usedIds = new Set();
+      
+      for (let p = 0; p < prodCount; p++) {
+        let randProd;
+        do {
+          randProd = DEFAULT_PRODUCTS[Math.floor(Math.random() * DEFAULT_PRODUCTS.length)];
+        } while (usedIds.has(randProd.id));
+        usedIds.add(randProd.id);
+        
+        cart.push({
+          prod: randProd,
+          qty: Math.floor(Math.random() * 2) + 1,
+        });
+      }
+
+      let subtotal = 0;
+      const saleItems = cart.map(item => {
+        const sub = item.prod.price * item.qty;
+        subtotal += sub;
+        return {
+          productId: item.prod.id,
+          productName: item.prod.name,
+          price: item.prod.price,
+          quantity: item.qty,
+          subtotal: sub,
+        };
+      });
+
+      const tax = 0;
+      const total = subtotal;
+
+      const payOptions = [20000, 50000, 100000, 150000, 200000];
+      let pay = payOptions.find(o => o >= total) || (Math.ceil(total / 50000) * 50000);
+      
+      salesList.push({
+        id: `sale-${invoiceCounter}`,
+        invoiceNumber: `INV-${saleTime.getFullYear()}${(saleTime.getMonth() + 1).toString().padStart(2, "0")}${saleTime.getDate().toString().padStart(2, "0")}-${invoiceCounter}`,
+        date: saleTime.toISOString(),
+        items: saleItems,
+        subtotal,
+        tax,
+        total,
+        paymentAmount: pay,
+        changeAmount: pay - total,
+        cashierName: ["Budi", "Siti", "Andi"][Math.floor(Math.random() * 3)],
+      });
+      invoiceCounter++;
+    }
+  }
+
+  return salesList;
+}
+
 // Firestore Seeding and Migrations
 async function runSqlMigrations(): Promise<string> {
   if (!db) {
     return "Firebase tidak terinisialisasi. Penyimpanan lokal fallback aktif dan siap digunakan!";
   }
   try {
+    let seededCount = 0;
+
+    // 1. Users
     const usersList = await fetchCollection("users");
     if (usersList.length === 0) {
-      await saveStoreSettings({
-        storeName: "BFC Geprek Aruji",
-        storeTagline: "Berkah Fried Chicken",
-        storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
-        storePhone: "0812-3456-7890"
-      });
-
       const PRESET_USERS = [
         { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin", name: "Adam Superadmin" },
         { id: "user-2", username: "kasir", password: "kasir123", role: "kasir", name: "Siti Kasir Utama" },
         { id: "user-3", username: "owner", password: "owner123", role: "owner", name: "Pak Hartono Owner" }
       ];
       await saveCollection("users", PRESET_USERS);
-      await saveCollection("ingredients", DEFAULT_INGREDIENTS);
-      await saveCollection("products", DEFAULT_PRODUCTS);
+      seededCount++;
+    }
 
-      return "Migrasi berhasil! Database terintegrasi Firebase Firestore telah di-seed dengan sukses.";
+    // 2. Ingredients
+    const ingredientsList = await fetchCollection("ingredients");
+    if (ingredientsList.length === 0) {
+      await saveCollection("ingredients", DEFAULT_INGREDIENTS);
+      seededCount++;
+    }
+
+    // 3. Products
+    const productsList = await fetchCollection("products");
+    if (productsList.length === 0) {
+      await saveCollection("products", DEFAULT_PRODUCTS);
+      seededCount++;
+    }
+
+    // 4. Sales
+    const salesList = await fetchCollection("sales");
+    if (salesList.length === 0) {
+      const mockSales = generateMockSales();
+      await saveCollection("sales", mockSales);
+      seededCount++;
+    }
+
+    // 5. Expenses
+    const expensesList = await fetchCollection("expenses");
+    if (expensesList.length === 0) {
+      await saveCollection("expenses", DEFAULT_EXPENSES);
+      seededCount++;
+    }
+
+    // 6. Wastage
+    const wastageList = await fetchCollection("wastage");
+    if (wastageList.length === 0) {
+      await saveCollection("wastage", DEFAULT_WASTAGE);
+      seededCount++;
+    }
+
+    // 7. Store Settings
+    try {
+      const docRef = doc(db, "storeSettings", "store");
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        await saveStoreSettings({
+          storeName: "BFC Geprek Aruji",
+          storeTagline: "Berkah Fried Chicken",
+          storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
+          storePhone: "0812-3456-7890"
+        });
+        seededCount++;
+      }
+    } catch (err: any) {
+      console.warn("Failed to check/save store settings:", err.message);
+    }
+
+    if (seededCount > 0) {
+      return `Migrasi berhasil! Database terintegrasi Firebase Firestore telah di-seed dengan sukses (${seededCount} bagian diisi baru).`;
     }
     return "Migrasi berhasil! Struktur database Firebase Firestore telah siap dan sinkron.";
   } catch (err: any) {

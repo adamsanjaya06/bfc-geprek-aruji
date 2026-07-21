@@ -232,25 +232,25 @@ export async function syncWithBackend(): Promise<void> {
     const res = await fetch("/api/sync/state");
     if (res.ok) {
       const data = await res.json();
-      if (data.products && data.products.length > 0) {
+      if (data.products) {
         localStorage.setItem(LOCAL_STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
       }
-      if (data.ingredients && data.ingredients.length > 0) {
+      if (data.ingredients) {
         localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(data.ingredients));
       }
-      if (data.sales && data.sales.length > 0) {
+      if (data.sales) {
         localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify(data.sales));
       }
-      if (data.expenses && data.expenses.length > 0) {
+      if (data.expenses) {
         localStorage.setItem(LOCAL_STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses));
       }
-      if (data.wastage && data.wastage.length > 0) {
+      if (data.wastage) {
         localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(data.wastage));
       }
       if (data.storeSettings) {
         localStorage.setItem("pos_fc_settings", JSON.stringify(data.storeSettings));
       }
-      if (data.users && data.users.length > 0) {
+      if (data.users) {
         localStorage.setItem("pos_fc_users", JSON.stringify(data.users));
       }
     }

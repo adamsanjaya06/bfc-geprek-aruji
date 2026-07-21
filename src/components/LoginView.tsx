@@ -209,7 +209,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
         {/* Quick Login Section */}
         <div className="mt-6 pt-6 border-t border-stone-100">
           <p className="text-[10px] font-extrabold uppercase tracking-widest text-bento-text-muted text-center mb-3">
-            Masuk Cepat (Quick Demo Login)
+            Masuk Cepat
           </p>
           <div className="grid grid-cols-3 gap-2">
             <button
@@ -220,7 +220,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               className="px-2.5 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl border border-blue-100 text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center disabled:opacity-50"
             >
               Kasir
-              <span className="block text-[8px] text-blue-500 font-bold normal-case mt-0.5">kasir123</span>
             </button>
             <button
               id="quick-login-owner"
@@ -230,7 +229,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               className="px-2.5 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl border border-amber-100 text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center disabled:opacity-50"
             >
               Owner
-              <span className="block text-[8px] text-amber-500 font-bold normal-case mt-0.5">owner123</span>
             </button>
             <button
               id="quick-login-admin"
@@ -240,7 +238,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               className="px-2.5 py-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl border border-purple-100 text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer text-center disabled:opacity-50"
             >
               Admin
-              <span className="block text-[8px] text-purple-500 font-bold normal-case mt-0.5">admin123</span>
             </button>
           </div>
         </div>
