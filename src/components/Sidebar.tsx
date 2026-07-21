@@ -80,66 +80,64 @@ export default function Sidebar({
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
-      <div>
-        {/* Brand Logo Header */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="bg-bento-gold text-bento-maroon p-2.5 rounded-xl shadow-lg font-black text-xl flex items-center justify-center">
-              <Drumstick className="w-6 h-6 text-bento-maroon" />
-            </div>
-            <div>
-              <h1 className="font-extrabold text-base tracking-tight text-white leading-tight">{storeName}</h1>
-              <p className="text-[11px] text-bento-gold font-medium">{storeTagline}</p>
-            </div>
+      {/* Brand Logo Header - Fixed */}
+      <div className="p-6 border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="bg-bento-gold text-bento-maroon p-2.5 rounded-xl shadow-lg font-black text-xl flex items-center justify-center">
+            <Drumstick className="w-6 h-6 text-bento-maroon" />
           </div>
-          
-          {/* Close button for mobile */}
-          <button 
-            onClick={onClose}
-            className="lg:hidden p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-            title="Tutup Menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div>
+            <h1 className="font-extrabold text-base tracking-tight text-white leading-tight">{storeName}</h1>
+            <p className="text-[11px] text-bento-gold font-medium">{storeTagline}</p>
+          </div>
         </div>
-
-        {/* Navigation Tabs */}
-        <nav className="p-4 space-y-1">
-          {menuItems.map((item) => {
-            const IconComponent = item.icon;
-            const isActive = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                id={`nav-tab-${item.id}`}
-                onClick={() => {
-                  setCurrentTab(item.id);
-                  onClose();
-                }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-left font-semibold text-sm group ${
-                  isActive
-                    ? "bg-bento-orange text-white shadow-md shadow-orange-950/30"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <IconComponent className={`w-5 h-5 transition-transform group-hover:scale-105 ${isActive ? "text-white" : "text-white/60 group-hover:text-white"}`} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge !== undefined && (
-                  <span className="flex items-center gap-1 bg-bento-gold text-bento-maroon text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
+        
+        {/* Close button for mobile */}
+        <button 
+          onClick={onClose}
+          className="lg:hidden p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+          title="Tutup Menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Cashier profile & configuration */}
-      <div className="p-4 border-t border-white/10 bg-black/10 space-y-3">
+      {/* Navigation Tabs - Scrollable */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin">
+        {menuItems.map((item) => {
+          const IconComponent = item.icon;
+          const isActive = currentTab === item.id;
+          return (
+            <button
+              key={item.id}
+              id={`nav-tab-${item.id}`}
+              onClick={() => {
+                setCurrentTab(item.id);
+                onClose();
+              }}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-left font-semibold text-sm group ${
+                isActive
+                  ? "bg-bento-orange text-white shadow-md shadow-orange-950/30"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <IconComponent className={`w-5 h-5 transition-transform group-hover:scale-105 ${isActive ? "text-white" : "text-white/60 group-hover:text-white"}`} />
+                <span>{item.label}</span>
+              </div>
+              {item.badge !== undefined && (
+                <span className="flex items-center gap-1 bg-bento-gold text-bento-maroon text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Cashier profile & configuration - Fixed */}
+      <div className="p-4 border-t border-white/10 bg-black/10 space-y-3 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-bento-gold/20 border border-bento-gold/30 flex items-center justify-center text-bento-gold font-bold">
             <User className="w-4 h-4 text-bento-gold" />

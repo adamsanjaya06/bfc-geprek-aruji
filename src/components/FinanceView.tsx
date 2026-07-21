@@ -200,7 +200,7 @@ export default function FinanceView() {
             body {
               font-family: monospace;
               padding: 30px;
-              color: #3e2723;
+              color: #1c1917;
               background-color: #fff;
             }
             .flex { display: flex; }
@@ -217,11 +217,9 @@ export default function FinanceView() {
             .border-double { border-top: 3px double #3e2723; border-bottom: 3px double #3e2723; }
             .divide-y > * + * { border-top: 1px solid #e0c097; }
             .uppercase { text-transform: uppercase; }
-            .text-emerald-700 { color: #047857; }
-            .text-bento-red { color: #c62828; }
-            .text-orange-600 { color: #ea580c; }
-            .bg-stone-50\\/50 { background-color: #fff8e1; }
-            .bg-bento-light-accent { background-color: #fff3e0; }
+            .text-emerald-700 { color: #047857 !important; font-weight: bold; }
+            .text-bento-red { color: #c62828 !important; }
+            .text-orange-600 { color: #ea580c !important; }
             .max-w-3xl { max-w: 48rem; margin: 0 auto; }
             .text-center { text-align: center; }
             .text-right { text-align: right; }
@@ -231,6 +229,21 @@ export default function FinanceView() {
             .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #e0c097; padding-bottom: 15px; }
             .header h1 { margin: 0 0 5px 0; font-size: 20px; color: #8b0000; }
             .header p { margin: 3px 0; font-size: 11px; color: #8d6e63; font-weight: bold; }
+            
+            /* Enhanced Tailwind Mappings for Printable Iframe */
+            [class*="bg-stone-50"] { background-color: #fafaf9 !important; }
+            [class*="bg-bento-light-accent"] { background-color: #fffbeb !important; }
+            [class*="bg-bento-light-orange"] { background-color: #fef3c7 !important; }
+            [class*="bg-red-50"] { background-color: #fef2f2 !important; }
+            [class*="bg-emerald-50"] { background-color: #ecfdf5 !important; }
+            [class*="border-bento-border"] { border-color: #e0c097 !important; }
+            [class*="divide-stone-100"] > * + * { border-top: 1px solid #f5f5f4 !important; }
+            [class*="text-emerald-700"] { color: #047857 !important; }
+            [class*="text-bento-red"] { color: #c62828 !important; }
+            [class*="text-orange-600"] { color: #ea580c !important; }
+            [class*="text-emerald-800"] { color: #065f46 !important; }
+            [class*="text-red-800"] { color: #991b1b !important; }
+            [class*="border-dashed"] { border-style: dashed !important; }
           </style>
         </head>
         <body>
@@ -243,18 +256,19 @@ export default function FinanceView() {
           <div class="max-w-3xl">
             ${printContents}
           </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() {
-                window.frameElement.remove();
-              }, 100);
-            };
-          </script>
         </body>
       </html>
     `);
     doc.close();
+
+    // Focus and execute print directly from parent window to ensure absolute compatibility and reliability
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    }, 500);
   };
 
   // Filter Expense History List

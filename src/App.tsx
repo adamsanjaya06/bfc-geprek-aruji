@@ -27,16 +27,51 @@ import { Clock, AlertTriangle, Menu } from "lucide-react";
 import { getStoreSettings } from "./components/SettingsView";
 
 export default function App() {
-  // Session User Authentication state
-  const [user, setUser] = useState<User | null>(null);
+  // Session User Authentication state with localStorage persistence
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem("bfc_pos_user");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
 
   // Initialize and load database states
   const [products, setProducts] = useState<Product[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   
-  // Navigation states
-  const [currentTab, setCurrentTab] = useState<string>("dashboard");
+  // Navigation states with localStorage persistence
+  const [currentTab, setCurrentTabState] = useState<string>(() => {
+    const saved = localStorage.getItem("bfc_pos_tab");
+    return saved || "dashboard";
+  });
+  
+  const setCurrentTab = (tab: string) => {
+    setCurrentTabState(tab);
+    localStorage.setItem("bfc_pos_tab", tab);
+  };
+
+  const handleSetUser = (newUser: User | null) => {
+    setUser(newUser);
+    if (newUser) {
+      localStorage.setItem("bfc_pos_user", JSON.stringify(newUser));
+      // Save default tab based on user role if not already customized
+      if (!localStorage.getItem("bfc_pos_tab")) {
+        const defaultTab = newUser.role === "kasir" ? "pos" : "dashboard";
+        setCurrentTabState(defaultTab);
+        localStorage.setItem("bfc_pos_tab", defaultTab);
+      }
+    } else {
+      localStorage.removeItem("bfc_pos_user");
+      localStorage.removeItem("bfc_pos_tab");
+    }
+  };
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Store information state
@@ -170,7 +205,7 @@ export default function App() {
   // Guard: if user is not authenticated, render Login Page
   if (!user) {
     return <LoginView onLoginSuccess={(u) => {
-      setUser(u);
+      handleSetUser(u);
       // Auto redirect based on primary role tasks
       if (u.role === "kasir") {
         setCurrentTab("pos");
@@ -197,7 +232,7 @@ export default function App() {
         setCurrentTab={setCurrentTab}
         ingredients={ingredients}
         user={user}
-        onLogout={() => setUser(null)}
+        onLogout={() => handleSetUser(null)}
         storeName={storeSettings.storeName}
         storeTagline={storeSettings.storeTagline}
         isOpen={isSidebarOpen}

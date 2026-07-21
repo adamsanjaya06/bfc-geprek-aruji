@@ -38,6 +38,7 @@ export default function PosView({
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
+  const [activeMobileTab, setActiveMobileTab] = useState<"menu" | "cart">("menu");
   
   // Payment Modal States
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
@@ -282,10 +283,39 @@ export default function PosView({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-140px)]">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6 h-[calc(100vh-140px)] relative">
+      
+      {/* Mobile View Selector Tabs */}
+      <div className="flex lg:hidden bg-white p-1 rounded-xl border border-bento-border/50 shadow-sm shrink-0 gap-1">
+        <button
+          onClick={() => setActiveMobileTab("menu")}
+          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            activeMobileTab === "menu"
+              ? "bg-bento-orange text-white shadow-xs"
+              : "text-bento-text-muted hover:text-bento-text hover:bg-stone-50"
+          }`}
+        >
+          Daftar Menu Makanan
+        </button>
+        <button
+          onClick={() => setActiveMobileTab("cart")}
+          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 relative ${
+            activeMobileTab === "cart"
+              ? "bg-bento-orange text-white shadow-xs"
+              : "text-bento-text-muted hover:text-bento-text hover:bg-stone-50"
+          }`}
+        >
+          Keranjang Penjualan
+          {cart.length > 0 && (
+            <span className="bg-bento-red text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0">
+              {cart.reduce((sum, i) => sum + i.quantity, 0)}
+            </span>
+          )}
+        </button>
+      </div>
       
       {/* LEFT PANEL: Menu & Product Filter - 7 Cols */}
-      <div className="lg:col-span-7 flex flex-col justify-between h-full space-y-4">
+      <div className={`lg:col-span-7 flex-col justify-between h-full space-y-4 overflow-hidden ${activeMobileTab === "menu" ? "flex" : "hidden lg:flex"}`}>
         {/* Top Control Bar: Search & Category */}
         <div className="bg-white p-4 rounded-2xl border border-bento-border shadow-md space-y-3">
           {/* Search bar */}
@@ -371,8 +401,8 @@ export default function PosView({
 
                     {/* Quick Add floating indicator */}
                     {!isOutOfStock && (
-                      <div className="absolute bottom-2 right-2 bg-bento-orange text-white p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
-                        <Plus className="w-3.5 h-3.5" />
+                      <div className="absolute bottom-2 right-2 bg-bento-orange text-white p-1.5 rounded-lg transition-all shadow-md group-hover:bg-bento-maroon">
+                        <Plus className="w-4 h-4 font-black" />
                       </div>
                     )}
                   </div>
@@ -385,10 +415,28 @@ export default function PosView({
             </div>
           )}
         </div>
+
+        {/* Floating Cart Button for mobile */}
+        {cart.length > 0 && (
+          <button
+            onClick={() => setActiveMobileTab("cart")}
+            className="lg:hidden w-full bg-bento-maroon text-white py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-between shadow-lg hover:bg-bento-maroon/90 cursor-pointer shrink-0 border border-white/10"
+          >
+            <span className="flex items-center gap-2">
+              <span className="bg-bento-gold text-bento-maroon font-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                {cart.reduce((sum, i) => sum + i.quantity, 0)}
+              </span>
+              <span>Lihat Keranjang Belanja</span>
+            </span>
+            <span className="font-extrabold text-bento-gold">
+              {formatIDR(total)} →
+            </span>
+          </button>
+        )}
       </div>
 
       {/* RIGHT PANEL: Shopping Cart - 5 Cols */}
-      <div id="pos-shopping-cart" className="lg:col-span-5 bg-white rounded-2xl border border-bento-border shadow-md flex flex-col justify-between h-full overflow-hidden">
+      <div id="pos-shopping-cart" className={`lg:col-span-5 bg-white rounded-2xl border border-bento-border shadow-md flex-col justify-between h-full overflow-hidden ${activeMobileTab === "cart" ? "flex" : "hidden lg:flex"}`}>
         {/* Cart Header */}
         <div className="p-4 border-b border-bento-border/50 flex justify-between items-center bg-bento-light-yellow">
           <div>
