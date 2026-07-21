@@ -716,88 +716,94 @@ app.post("/api/auth/login", async (req, res) => {
 });
 
 // Sync State API endpoints
+// Helper to read and format all collections from Firebase Firestore
+async function getFullDbState(): Promise<any> {
+  const [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
+    fetchCollection("ingredients"),
+    fetchCollection("products"),
+    fetchCollection("sales"),
+    fetchCollection("expenses"),
+    fetchCollection("wastage"),
+    fetchCollection("users"),
+    fetchStoreSettings(),
+  ]);
+
+  const formattedIngredients = ingredients.map(ing => ({
+    id: ing.id,
+    name: ing.name,
+    stock: Number(ing.stock),
+    unit: ing.unit,
+    minStock: Number(ing.minStock ?? ing.min_stock ?? 0),
+    cost: Number(ing.cost),
+  }));
+
+  const formattedProducts = products.map(p => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    price: Number(p.price),
+    image: p.image,
+    isAvailable: p.isAvailable === true || p.isAvailable === 1 || p.is_available === true,
+    recipe: Array.isArray(p.recipe) ? p.recipe.map((r: any) => ({
+      ingredientId: r.ingredientId ?? r.ingredient_id,
+      quantityNeeded: Number(r.quantityNeeded ?? r.quantity_needed ?? 0)
+    })) : []
+  }));
+
+  const formattedSales = sales.map(s => ({
+    id: s.id,
+    invoiceNumber: s.invoiceNumber ?? s.invoice_number,
+    date: s.date,
+    items: Array.isArray(s.items) ? s.items.map((item: any) => ({
+      productId: item.productId ?? item.product_id,
+      productName: item.productName ?? item.product_name,
+      price: Number(item.price),
+      quantity: Number(item.quantity),
+      subtotal: Number(item.subtotal),
+    })) : [],
+    subtotal: Number(s.subtotal),
+    tax: Number(s.tax ?? 0),
+    total: Number(s.total),
+    paymentAmount: Number(s.paymentAmount ?? s.payment_amount ?? s.total),
+    changeAmount: Number(s.changeAmount ?? s.change_amount ?? 0),
+    cashierName: s.cashierName ?? s.cashier_name,
+  })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const formattedExpenses = expenses.map(e => ({
+    id: e.id,
+    date: e.date,
+    description: e.description,
+    category: e.category,
+    amount: Number(e.amount),
+  })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const formattedWastage = wastage.map(w => ({
+    id: w.id,
+    date: w.date,
+    ingredientId: w.ingredientId ?? w.ingredient_id,
+    ingredientName: w.ingredientName ?? w.ingredient_name,
+    quantity: Number(w.quantity),
+    unit: w.unit,
+    costPerUnit: Number(w.costPerUnit ?? w.cost_per_unit ?? 0),
+    totalCost: Number(w.totalCost ?? w.total_cost ?? 0),
+    reason: w.reason,
+  })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return {
+    ingredients: formattedIngredients,
+    products: formattedProducts,
+    sales: formattedSales,
+    expenses: formattedExpenses,
+    wastage: formattedWastage,
+    users: users.length > 0 ? users : undefined,
+    storeSettings,
+  };
+}
+
 app.get("/api/sync/state", async (req, res) => {
   try {
-    const [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
-      fetchCollection("ingredients"),
-      fetchCollection("products"),
-      fetchCollection("sales"),
-      fetchCollection("expenses"),
-      fetchCollection("wastage"),
-      fetchCollection("users"),
-      fetchStoreSettings(),
-    ]);
-
-    const formattedIngredients = ingredients.map(ing => ({
-      id: ing.id,
-      name: ing.name,
-      stock: Number(ing.stock),
-      unit: ing.unit,
-      minStock: Number(ing.minStock ?? ing.min_stock ?? 0),
-      cost: Number(ing.cost),
-    }));
-
-    const formattedProducts = products.map(p => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      price: Number(p.price),
-      image: p.image,
-      isAvailable: p.isAvailable === true || p.isAvailable === 1 || p.is_available === true,
-      recipe: Array.isArray(p.recipe) ? p.recipe.map((r: any) => ({
-        ingredientId: r.ingredientId ?? r.ingredient_id,
-        quantityNeeded: Number(r.quantityNeeded ?? r.quantity_needed ?? 0)
-      })) : []
-    }));
-
-    const formattedSales = sales.map(s => ({
-      id: s.id,
-      invoiceNumber: s.invoiceNumber ?? s.invoice_number,
-      date: s.date,
-      items: Array.isArray(s.items) ? s.items.map((item: any) => ({
-        productId: item.productId ?? item.product_id,
-        productName: item.productName ?? item.product_name,
-        price: Number(item.price),
-        quantity: Number(item.quantity),
-        subtotal: Number(item.subtotal),
-      })) : [],
-      subtotal: Number(s.subtotal),
-      tax: Number(s.tax ?? 0),
-      total: Number(s.total),
-      paymentAmount: Number(s.paymentAmount ?? s.payment_amount ?? s.total),
-      changeAmount: Number(s.changeAmount ?? s.change_amount ?? 0),
-      cashierName: s.cashierName ?? s.cashier_name,
-    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    const formattedExpenses = expenses.map(e => ({
-      id: e.id,
-      date: e.date,
-      description: e.description,
-      category: e.category,
-      amount: Number(e.amount),
-    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    const formattedWastage = wastage.map(w => ({
-      id: w.id,
-      date: w.date,
-      ingredientId: w.ingredientId ?? w.ingredient_id,
-      ingredientName: w.ingredientName ?? w.ingredient_name,
-      quantity: Number(w.quantity),
-      unit: w.unit,
-      costPerUnit: Number(w.costPerUnit ?? w.cost_per_unit ?? 0),
-      totalCost: Number(w.totalCost ?? w.total_cost ?? 0),
-      reason: w.reason,
-    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    res.json({
-      ingredients: formattedIngredients,
-      products: formattedProducts,
-      sales: formattedSales,
-      expenses: formattedExpenses,
-      wastage: formattedWastage,
-      users: users.length > 0 ? users : undefined,
-      storeSettings,
-    });
+    const state = await getFullDbState();
+    res.json(state);
   } catch (err: any) {
     console.error("Failed to read state from Firestore:", err.message);
     const fallbackDb = loadFallbackDb();
@@ -836,7 +842,9 @@ app.post("/api/sync/state", async (req, res) => {
       await saveCollection("wastage", wastage);
     }
 
-    res.json({ success: true });
+    // Immediately fetch and return the updated state from Firestore
+    const state = await getFullDbState();
+    res.json(state);
   } catch (err: any) {
     console.error("Failed to save state to Firestore:", err.message);
     const fallbackDb = loadFallbackDb();
@@ -848,7 +856,7 @@ app.post("/api/sync/state", async (req, res) => {
     if (storeSettings) fallbackDb.storeSettings = storeSettings;
     if (users) fallbackDb.users = users;
     saveFallbackDb(fallbackDb);
-    res.json({ success: true, fallback: true });
+    res.json({ ...fallbackDb, fallback: true });
   }
 });
 

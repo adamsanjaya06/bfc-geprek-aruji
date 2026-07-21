@@ -28,15 +28,34 @@ const dbCache = {
   users: [] as User[],
 };
 
-// Synchronization guards to prevent race conditions / rubber-banding
+// Synchronization guards and change subscription mechanism
 let lastPushTime = 0;
 let activePushes = 0;
 
+type DbChangeListener = () => void;
+const listeners = new Set<DbChangeListener>();
+
+export function subscribeToDbChanges(listener: DbChangeListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function notifyDbChanges() {
+  listeners.forEach(l => {
+    try {
+      l();
+    } catch (e) {
+      console.error("Listener error:", e);
+    }
+  });
+}
+
 // Periodic automatic sync with Firebase Firestore
 export async function syncWithBackend(): Promise<void> {
-  // If we have active pushes or recently pushed within 3 seconds, skip GET sync
-  // to avoid overwriting newer local updates with stale backend states.
-  if (activePushes > 0 || Date.now() - lastPushTime < 3000) {
+  // If we have active pushes, skip GET sync to avoid race conditions
+  if (activePushes > 0) {
     return;
   }
 
@@ -44,13 +63,19 @@ export async function syncWithBackend(): Promise<void> {
     const res = await fetch("/api/sync/state");
     if (res.ok) {
       const data = await res.json();
-      if (data.products) dbCache.products = data.products;
-      if (data.ingredients) dbCache.ingredients = data.ingredients;
-      if (data.sales) dbCache.sales = data.sales;
-      if (data.expenses) dbCache.expenses = data.expenses;
-      if (data.wastage) dbCache.wastage = data.wastage;
-      if (data.storeSettings) dbCache.storeSettings = data.storeSettings;
-      if (data.users) dbCache.users = data.users;
+      let changed = false;
+
+      if (data.products) { dbCache.products = data.products; changed = true; }
+      if (data.ingredients) { dbCache.ingredients = data.ingredients; changed = true; }
+      if (data.sales) { dbCache.sales = data.sales; changed = true; }
+      if (data.expenses) { dbCache.expenses = data.expenses; changed = true; }
+      if (data.wastage) { dbCache.wastage = data.wastage; changed = true; }
+      if (data.storeSettings) { dbCache.storeSettings = data.storeSettings; changed = true; }
+      if (data.users) { dbCache.users = data.users; changed = true; }
+
+      if (changed) {
+        notifyDbChanges();
+      }
     }
   } catch (err) {
     console.warn("Backend sync failed:", err);
@@ -76,15 +101,31 @@ export async function pushToBackend(
   if (storeSettings) dbCache.storeSettings = storeSettings;
   if (users) dbCache.users = users;
 
+  // Notify listeners immediately for optimistic response in UI
+  notifyDbChanges();
+
   lastPushTime = Date.now();
   activePushes++;
 
   try {
-    await fetch("/api/sync/state", {
+    const res = await fetch("/api/sync/state", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ingredients, products, sales, expenses, wastage, storeSettings, users }),
     });
+    if (res.ok) {
+      const data = await res.json();
+      // Instantly apply the authoritative state returned by the backend
+      if (data.products) dbCache.products = data.products;
+      if (data.ingredients) dbCache.ingredients = data.ingredients;
+      if (data.sales) dbCache.sales = data.sales;
+      if (data.expenses) dbCache.expenses = data.expenses;
+      if (data.wastage) dbCache.wastage = data.wastage;
+      if (data.storeSettings) dbCache.storeSettings = data.storeSettings;
+      if (data.users) dbCache.users = data.users;
+
+      notifyDbChanges();
+    }
   } catch (err) {
     console.warn("Backend state sync failed:", err);
   } finally {

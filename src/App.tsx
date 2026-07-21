@@ -23,7 +23,8 @@ import {
   syncWithBackend,
   getExpenses,
   getWastage,
-  getStoreSettings
+  getStoreSettings,
+  subscribeToDbChanges
 } from "./utils/db";
 import { Product, Ingredient, Sale, User, Expense, Wastage } from "./types";
 import { Clock, AlertTriangle, Menu } from "lucide-react";
@@ -87,9 +88,7 @@ export default function App() {
   // First-time database boot, sync with backend, and loading
   useEffect(() => {
     initializeDb();
-    syncWithBackend().then(() => {
-      refreshDbStates();
-    });
+    syncWithBackend();
   }, []);
 
   // Operational real-time live clock ticking
@@ -100,25 +99,31 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Periodic automatic sync with Firebase Firestore (every 2 seconds)
+  // Listen for centralized database cache updates (live realtime events)
+  useEffect(() => {
+    const unsubscribe = subscribeToDbChanges(() => {
+      refreshDbStates();
+    });
+    return unsubscribe;
+  }, []);
+
+  // Periodic automatic sync with Firebase Firestore (every 1 second for seamless multiplayer)
   useEffect(() => {
     if (!user) return;
     const syncInterval = setInterval(() => {
-      syncWithBackend().then(() => {
-        refreshDbStates();
-      });
-    }, 2000);
+      syncWithBackend();
+    }, 1000);
     return () => clearInterval(syncInterval);
   }, [user]);
 
-  // Sync state from LocalStorage database
+  // Sync in-memory states to React to trigger component re-renders
   const refreshDbStates = () => {
-    setProducts(getProducts());
-    setIngredients(getIngredients());
-    setSales(getSales());
-    setExpenses(getExpenses());
-    setWastages(getWastage());
-    setStoreSettings(getStoreSettings());
+    setProducts([...getProducts()]);
+    setIngredients([...getIngredients()]);
+    setSales([...getSales()]);
+    setExpenses([...getExpenses()]);
+    setWastages([...getWastage()]);
+    setStoreSettings({ ...getStoreSettings() });
   };
 
   // Low Stock Notification list
