@@ -695,9 +695,11 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server Fried Chicken POS running on port ${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server Fried Chicken POS running on port ${PORT}`);
+    });
+  }
 }
 
 startServer();
