@@ -18,8 +18,7 @@ import {
   Printer
 } from "lucide-react";
 import { Product, Ingredient, CartItem, Sale } from "../types";
-import { checkCartAvailability, processSale } from "../utils/db";
-import { getStoreSettings } from "./SettingsView";
+import { checkCartAvailability, processSale, getStoreSettings } from "../utils/db";
 
 interface PosViewProps {
   products: Product[];

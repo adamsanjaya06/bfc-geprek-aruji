@@ -3,184 +3,51 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Product, Ingredient, Sale, CartItem, Expense, Wastage } from "../types";
+import { Product, Ingredient, Sale, CartItem, Expense, Wastage, User } from "../types";
 
-const LOCAL_STORAGE_KEYS = {
-  PRODUCTS: "pos_fc_products",
-  INGREDIENTS: "pos_fc_ingredients",
-  SALES: "pos_fc_sales",
-  EXPENSES: "pos_fc_expenses",
-  WASTAGE: "pos_fc_wastage",
+export interface StoreSettings {
+  storeName: string;
+  storeTagline: string;
+  storeAddress: string;
+  storePhone: string;
+}
+
+// Centrally managed in-memory state cache
+const dbCache = {
+  products: [] as Product[],
+  ingredients: [] as Ingredient[],
+  sales: [] as Sale[],
+  expenses: [] as Expense[],
+  wastage: [] as Wastage[],
+  storeSettings: {
+    storeName: "BFC Geprek Aruji",
+    storeTagline: "Berkah Fried Chicken",
+    storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
+    storePhone: "0812-3456-7890",
+  } as StoreSettings,
+  users: [] as User[],
 };
 
-const DEFAULT_INGREDIENTS: Ingredient[] = [
-  { id: "ing-1", name: "Ayam Potong Segar", stock: 150, unit: "pcs", minStock: 25, cost: 6000 },
-  { id: "ing-2", name: "Tepung Bumbu Krispi", stock: 25.0, unit: "kg", minStock: 5.0, cost: 15000 },
-  { id: "ing-3", name: "Minyak Goreng Sawit", stock: 40.0, unit: "liter", minStock: 8.0, cost: 14000 },
-  { id: "ing-4", name: "Cabe Rawit Merah", stock: 5.5, unit: "kg", minStock: 1.5, cost: 40000 },
-  { id: "ing-5", name: "Beras Jasmine Super", stock: 30.0, unit: "kg", minStock: 8.0, cost: 13000 },
-  { id: "ing-6", name: "Cup Gelas + Sedotan", stock: 250, unit: "pcs", minStock: 30, cost: 500 },
-  { id: "ing-7", name: "Es Batu Kristal", stock: 45.0, unit: "kg", minStock: 10.0, cost: 2000 },
-  { id: "ing-8", name: "Jeruk Peras Segar", stock: 12.0, unit: "kg", minStock: 3.0, cost: 12000 },
-  { id: "ing-9", name: "Kentang Beku Slices", stock: 15.0, unit: "kg", minStock: 4.0, cost: 22000 },
-];
-
-const DEFAULT_PRODUCTS: Product[] = [
-  {
-    id: "prod-1",
-    name: "Paket Geprek Hot",
-    category: "Paket Ayam",
-    price: 22000,
-    image: "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-1", quantityNeeded: 1 },
-      { ingredientId: "ing-2", quantityNeeded: 0.05 },
-      { ingredientId: "ing-3", quantityNeeded: 0.1 },
-      { ingredientId: "ing-4", quantityNeeded: 0.02 },
-      { ingredientId: "ing-5", quantityNeeded: 0.08 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
-    ],
-  },
-  {
-    id: "prod-2",
-    name: "Paket Mantap Dada",
-    category: "Paket Ayam",
-    price: 20000,
-    image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-1", quantityNeeded: 1 },
-      { ingredientId: "ing-2", quantityNeeded: 0.05 },
-      { ingredientId: "ing-3", quantityNeeded: 0.1 },
-      { ingredientId: "ing-5", quantityNeeded: 0.08 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
-    ],
-  },
-  {
-    id: "prod-3",
-    name: "Paket Hemat Sayap",
-    category: "Paket Ayam",
-    price: 17000,
-    image: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-1", quantityNeeded: 1 },
-      { ingredientId: "ing-2", quantityNeeded: 0.05 },
-      { ingredientId: "ing-3", quantityNeeded: 0.1 },
-      { ingredientId: "ing-5", quantityNeeded: 0.08 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
-    ],
-  },
-  {
-    id: "prod-4",
-    name: "Ayam Dada Krispi",
-    category: "Ala Carte",
-    price: 12000,
-    image: "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-1", quantityNeeded: 1 },
-      { ingredientId: "ing-2", quantityNeeded: 0.05 },
-      { ingredientId: "ing-3", quantityNeeded: 0.1 },
-    ],
-  },
-  {
-    id: "prod-5",
-    name: "Ayam Paha Atas",
-    category: "Ala Carte",
-    price: 11000,
-    image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-1", quantityNeeded: 1 },
-      { ingredientId: "ing-2", quantityNeeded: 0.05 },
-      { ingredientId: "ing-3", quantityNeeded: 0.1 },
-    ],
-  },
-  {
-    id: "prod-6",
-    name: "Kentang Goreng Krispi",
-    category: "Ala Carte",
-    price: 12000,
-    image: "https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-9", quantityNeeded: 0.15 },
-      { ingredientId: "ing-3", quantityNeeded: 0.05 },
-    ],
-  },
-  {
-    id: "prod-7",
-    name: "Es Teh Manis Jumbo",
-    category: "Minuman",
-    price: 5000,
-    image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.2 },
-    ],
-  },
-  {
-    id: "prod-8",
-    name: "Es Jeruk Peras Segar",
-    category: "Minuman",
-    price: 7000,
-    image: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-8", quantityNeeded: 0.2 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
-    ],
-  },
-  {
-    id: "prod-9",
-    name: "Nasi Putih Jasmine",
-    category: "Ala Carte",
-    price: 5000,
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [{ ingredientId: "ing-5", quantityNeeded: 0.08 }],
-  },
-];
-
+// Periodic automatic sync with Firebase Firestore
 export async function syncWithBackend(): Promise<void> {
   try {
     const res = await fetch("/api/sync/state");
     if (res.ok) {
       const data = await res.json();
-      if (data.products) {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
-      }
-      if (data.ingredients) {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(data.ingredients));
-      }
-      if (data.sales) {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify(data.sales));
-      }
-      if (data.expenses) {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses));
-      }
-      if (data.wastage) {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(data.wastage));
-      }
-      if (data.storeSettings) {
-        localStorage.setItem("pos_fc_settings", JSON.stringify(data.storeSettings));
-      }
-      if (data.users) {
-        localStorage.setItem("pos_fc_users", JSON.stringify(data.users));
-      }
+      if (data.products) dbCache.products = data.products;
+      if (data.ingredients) dbCache.ingredients = data.ingredients;
+      if (data.sales) dbCache.sales = data.sales;
+      if (data.expenses) dbCache.expenses = data.expenses;
+      if (data.wastage) dbCache.wastage = data.wastage;
+      if (data.storeSettings) dbCache.storeSettings = data.storeSettings;
+      if (data.users) dbCache.users = data.users;
     }
   } catch (err) {
     console.warn("Backend sync failed:", err);
   }
 }
 
+// Push local state update asynchronously to Firebase Firestore
 export async function pushToBackend(
   ingredients?: Ingredient[],
   products?: Product[],
@@ -190,6 +57,15 @@ export async function pushToBackend(
   storeSettings?: any,
   users?: any[]
 ) {
+  // Optimistic update of the in-memory cache for ultra-responsive UI
+  if (ingredients) dbCache.ingredients = ingredients;
+  if (products) dbCache.products = products;
+  if (sales) dbCache.sales = sales;
+  if (expenses) dbCache.expenses = expenses;
+  if (wastage) dbCache.wastage = wastage;
+  if (storeSettings) dbCache.storeSettings = storeSettings;
+  if (users) dbCache.users = users;
+
   try {
     await fetch("/api/sync/state", {
       method: "POST",
@@ -201,73 +77,76 @@ export async function pushToBackend(
   }
 }
 
+// No-op for compatibility
 export function initializeDb(force = false): void {
-  if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.PRODUCTS)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
-  }
-  if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.INGREDIENTS)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify([]));
-  }
-  if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.SALES)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify([]));
-  }
-  if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.EXPENSES)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.EXPENSES, JSON.stringify([]));
-  }
-  if (force || !localStorage.getItem(LOCAL_STORAGE_KEYS.WASTAGE)) {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify([]));
-  }
+  // No longer needed with fully dynamic Firestore synchronization
 }
 
 export function getProducts(): Product[] {
-  initializeDb();
-  return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.PRODUCTS) || "[]");
+  return dbCache.products;
 }
 
 export function getIngredients(): Ingredient[] {
-  initializeDb();
-  return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.INGREDIENTS) || "[]");
+  return dbCache.ingredients;
 }
 
 export function getSales(): Sale[] {
-  initializeDb();
-  return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.SALES) || "[]");
+  return dbCache.sales;
 }
 
 export function getExpenses(): Expense[] {
-  initializeDb();
-  return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.EXPENSES) || "[]");
+  return dbCache.expenses;
 }
 
 export function saveExpenses(expenses: Expense[]): void {
-  localStorage.setItem(LOCAL_STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
   pushToBackend(undefined, undefined, undefined, expenses, undefined);
 }
 
 export function getWastage(): Wastage[] {
-  initializeDb();
-  return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.WASTAGE) || "[]");
+  return dbCache.wastage;
 }
 
 export function saveWastage(wastage: Wastage[]): void {
-  localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(wastage));
   pushToBackend(undefined, undefined, undefined, undefined, wastage);
 }
 
 export function saveProducts(products: Product[]): void {
-  localStorage.setItem(LOCAL_STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
   pushToBackend(undefined, products, undefined);
 }
 
 export function saveIngredients(ingredients: Ingredient[]): void {
-  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
   pushToBackend(ingredients, undefined, undefined);
 }
 
 export function saveSales(sales: Sale[]): void {
-  localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify(sales));
   pushToBackend(undefined, undefined, sales);
 }
+
+// Store settings getters & setters (previously in SettingsView)
+export const getStoreSettings = (): StoreSettings => {
+  return dbCache.storeSettings;
+};
+
+export const saveStoreSettings = (settings: StoreSettings): void => {
+  pushToBackend(undefined, undefined, undefined, undefined, undefined, settings);
+};
+
+// Users getters & setters (previously in SettingsView)
+export const getStoredUsers = (): (User & { password?: string })[] => {
+  const defaults = [
+    { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin" as const, name: "Adam Superadmin" },
+    { id: "user-2", username: "kasir", password: "kasir123", role: "kasir" as const, name: "Siti Kasir Utama" },
+    { id: "user-3", username: "owner", password: "owner123", role: "owner" as const, name: "Pak Hartono Owner" }
+  ];
+  if (dbCache.users && dbCache.users.length > 0) {
+    return dbCache.users;
+  }
+  return defaults;
+};
+
+export const saveStoredUsers = (users: (User & { password?: string })[]): void => {
+  pushToBackend(undefined, undefined, undefined, undefined, undefined, undefined, users);
+};
 
 // Calculate the cost of goods sold (COGS) for a specific product based on ingredient prices
 export function calculateProductCOGS(product: Product, ingredientsList: Ingredient[]): number {
@@ -377,9 +256,6 @@ export function processSale(cart: CartItem[], paymentAmount: number, cashierName
 
   sales.push(newSale);
 
-  // Save both locally in one atomic stroke and sync to backend combined
-  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(updatedIngredients));
-  localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify(sales));
   pushToBackend(updatedIngredients, undefined, sales);
 
   return { success: true, sale: newSale };
@@ -415,9 +291,6 @@ export function recordWastage(ingredientId: string, quantity: number, reason: st
   };
   wastages.unshift(newWastage); // Put new at the top
 
-  // Save both locally and push as a combined payload to the backend
-  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
-  localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(wastages));
   pushToBackend(ingredients, undefined, undefined, undefined, wastages);
 
   return { success: true };
@@ -449,9 +322,6 @@ export function editWastage(wastageId: string, newQuantity: number, newReason: s
   wastage.reason = newReason;
   wastage.totalCost = Math.round(newQuantity * wastage.costPerUnit);
 
-  // Save both locally and sync to backend as a combined single update
-  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
-  localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(wastages));
   pushToBackend(ingredients, undefined, undefined, undefined, wastages);
 
   return { success: true };
@@ -476,9 +346,6 @@ export function deleteWastage(wastageId: string): { success: boolean; error?: st
   // Remove wastage record
   const updatedWastages = wastages.filter(w => w.id !== wastageId);
 
-  // Save both locally and sync to backend combined
-  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
-  localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(updatedWastages));
   pushToBackend(ingredients, undefined, undefined, undefined, updatedWastages);
 
   return { success: true };

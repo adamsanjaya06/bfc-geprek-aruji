@@ -28,9 +28,9 @@ import {
   getSales, 
   getProducts, 
   getIngredients, 
-  calculateProductCOGS 
+  calculateProductCOGS,
+  getStoreSettings
 } from "../utils/db";
-import { getStoreSettings } from "./SettingsView";
 
 interface FinanceViewProps {
   sales: Sale[];

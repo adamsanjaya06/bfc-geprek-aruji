@@ -22,11 +22,11 @@ import {
   initializeDb,
   syncWithBackend,
   getExpenses,
-  getWastage
+  getWastage,
+  getStoreSettings
 } from "./utils/db";
 import { Product, Ingredient, Sale, User, Expense, Wastage } from "./types";
 import { Clock, AlertTriangle, Menu } from "lucide-react";
-import { getStoreSettings } from "./components/SettingsView";
 
 export default function App() {
   // Session User Authentication state with localStorage persistence
@@ -100,14 +100,14 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Periodic automatic sync with Firebase Firestore (every 4 seconds)
+  // Periodic automatic sync with Firebase Firestore (every 2 seconds)
   useEffect(() => {
     if (!user) return;
     const syncInterval = setInterval(() => {
       syncWithBackend().then(() => {
         refreshDbStates();
       });
-    }, 4000);
+    }, 2000);
     return () => clearInterval(syncInterval);
   }, [user]);
 

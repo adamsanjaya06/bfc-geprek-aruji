@@ -23,8 +23,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { Sale, Product, Ingredient } from "../types";
-import { calculateProductCOGS, getSales, saveSales, getIngredients, saveIngredients } from "../utils/db";
-import { getStoreSettings } from "./SettingsView";
+import { calculateProductCOGS, getSales, saveSales, getIngredients, saveIngredients, getStoreSettings } from "../utils/db";
 
 interface SalesHistoryViewProps {
   sales: Sale[];

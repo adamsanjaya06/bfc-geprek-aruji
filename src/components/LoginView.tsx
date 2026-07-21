@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Lock, User, Drumstick, ArrowRight, ShieldCheck, ShoppingCart, BarChart3, AlertCircle } from "lucide-react";
 import { User as UserType } from "../types";
-import { getStoreSettings } from "./SettingsView";
+import { getStoreSettings, getStoredUsers } from "../utils/db";
 
 interface LoginViewProps {
   onLoginSuccess: (user: UserType) => void;
@@ -35,20 +35,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
       }
     } catch (err) {
       // Fallback if backend is booting or offline (Read custom user accounts from local database)
-      let presets = [
-        { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin" as const, name: "Adam Superadmin" },
-        { id: "user-2", username: "kasir", password: "kasir123", role: "kasir" as const, name: "Siti Kasir Utama" },
-        { id: "user-3", username: "owner", password: "owner123", role: "owner" as const, name: "Pak Hartono Owner" }
-      ];
-
-      try {
-        const saved = localStorage.getItem("pos_fc_users");
-        if (saved) {
-          presets = JSON.parse(saved);
-        }
-      } catch (e) {
-        console.error("Gagal membaca luring pos_fc_users:", e);
-      }
+      const presets = getStoredUsers();
 
       const matched = presets.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password);
       if (matched) {

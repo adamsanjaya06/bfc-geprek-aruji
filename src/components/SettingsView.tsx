@@ -22,66 +22,15 @@ import {
   CheckCircle
 } from "lucide-react";
 import { User } from "../types";
-import { pushToBackend, syncWithBackend } from "../utils/db";
-
-// Helper for store settings
-export interface StoreSettings {
-  storeName: string;
-  storeTagline: string;
-  storeAddress: string;
-  storePhone: string;
-}
-
-export const getStoreSettings = (): StoreSettings => {
-  const defaults = {
-    storeName: "BFC Geprek Aruji",
-    storeTagline: "Berkah Fried Chicken",
-    storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
-    storePhone: "0812-3456-7890",
-  };
-  try {
-    const saved = localStorage.getItem("pos_fc_settings");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.storeName === "ChickenPOS" || !parsed.storeName) {
-        return defaults;
-      }
-      return { ...defaults, ...parsed };
-    }
-  } catch (err) {
-    console.error("Gagal membaca pengaturan toko:", err);
-  }
-  return defaults;
-};
-
-export const saveStoreSettings = (settings: StoreSettings): void => {
-  localStorage.setItem("pos_fc_settings", JSON.stringify(settings));
-  pushToBackend(undefined, undefined, undefined, undefined, undefined, settings, undefined);
-};
-
-// Helper for users list
-export const getStoredUsers = (): (User & { password?: string })[] => {
-  const defaults = [
-    { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin" as const, name: "Adam Superadmin" },
-    { id: "user-2", username: "kasir", password: "kasir123", role: "kasir" as const, name: "Siti Kasir Utama" },
-    { id: "user-3", username: "owner", password: "owner123", role: "owner" as const, name: "Pak Hartono Owner" }
-  ];
-  try {
-    const saved = localStorage.getItem("pos_fc_users");
-    if (saved) return JSON.parse(saved);
-    // If not saved yet, write defaults to local storage
-    localStorage.setItem("pos_fc_users", JSON.stringify(defaults));
-    return defaults;
-  } catch (err) {
-    console.error("Gagal membaca daftar pengguna:", err);
-  }
-  return defaults;
-};
-
-export const saveStoredUsers = (users: (User & { password?: string })[]): void => {
-  localStorage.setItem("pos_fc_users", JSON.stringify(users));
-  pushToBackend(undefined, undefined, undefined, undefined, undefined, undefined, users);
-};
+import { 
+  pushToBackend, 
+  syncWithBackend, 
+  getStoreSettings, 
+  saveStoreSettings, 
+  getStoredUsers, 
+  saveStoredUsers,
+  StoreSettings 
+} from "../utils/db";
 
 interface SettingsViewProps {
   onSettingsUpdate?: () => void;

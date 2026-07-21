@@ -39,10 +39,6 @@ const DEFAULT_INGREDIENTS = [
   { id: "ing-3", name: "Minyak Goreng Sawit", stock: 40.0, unit: "liter", minStock: 8.0, cost: 14000 },
   { id: "ing-4", name: "Cabe Rawit Merah", stock: 5.5, unit: "kg", minStock: 1.5, cost: 40000 },
   { id: "ing-5", name: "Beras Jasmine Super", stock: 30.0, unit: "kg", minStock: 8.0, cost: 13000 },
-  { id: "ing-6", name: "Cup Gelas + Sedotan", stock: 250, unit: "pcs", minStock: 30, cost: 500 },
-  { id: "ing-7", name: "Es Batu Kristal", stock: 45.0, unit: "kg", minStock: 10.0, cost: 2000 },
-  { id: "ing-8", name: "Jeruk Peras Segar", stock: 12.0, unit: "kg", minStock: 3.0, cost: 12000 },
-  { id: "ing-9", name: "Kentang Beku Slices", stock: 15.0, unit: "kg", minStock: 4.0, cost: 22000 },
 ];
 
 const DEFAULT_PRODUCTS = [
@@ -59,8 +55,6 @@ const DEFAULT_PRODUCTS = [
       { ingredientId: "ing-3", quantityNeeded: 0.1 },
       { ingredientId: "ing-4", quantityNeeded: 0.02 },
       { ingredientId: "ing-5", quantityNeeded: 0.08 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
     ],
   },
   {
@@ -75,8 +69,6 @@ const DEFAULT_PRODUCTS = [
       { ingredientId: "ing-2", quantityNeeded: 0.05 },
       { ingredientId: "ing-3", quantityNeeded: 0.1 },
       { ingredientId: "ing-5", quantityNeeded: 0.08 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
     ],
   },
   {
@@ -91,8 +83,6 @@ const DEFAULT_PRODUCTS = [
       { ingredientId: "ing-2", quantityNeeded: 0.05 },
       { ingredientId: "ing-3", quantityNeeded: 0.1 },
       { ingredientId: "ing-5", quantityNeeded: 0.08 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
     ],
   },
   {
@@ -110,62 +100,108 @@ const DEFAULT_PRODUCTS = [
   },
   {
     id: "prod-5",
-    name: "Ayam Paha Atas",
-    category: "Ala Carte",
-    price: 11000,
-    image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-1", quantityNeeded: 1 },
-      { ingredientId: "ing-2", quantityNeeded: 0.05 },
-      { ingredientId: "ing-3", quantityNeeded: 0.1 },
-    ],
-  },
-  {
-    id: "prod-6",
-    name: "Kentang Goreng Krispi",
-    category: "Ala Carte",
-    price: 12000,
-    image: "https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-9", quantityNeeded: 0.15 },
-      { ingredientId: "ing-3", quantityNeeded: 0.05 },
-    ],
-  },
-  {
-    id: "prod-7",
-    name: "Es Teh Manis Jumbo",
-    category: "Minuman",
-    price: 5000,
-    image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.2 },
-    ],
-  },
-  {
-    id: "prod-8",
-    name: "Es Jeruk Peras Segar",
-    category: "Minuman",
-    price: 7000,
-    image: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&q=80&w=400",
-    isAvailable: true,
-    recipe: [
-      { ingredientId: "ing-8", quantityNeeded: 0.2 },
-      { ingredientId: "ing-6", quantityNeeded: 1 },
-      { ingredientId: "ing-7", quantityNeeded: 0.15 },
-    ],
-  },
-  {
-    id: "prod-9",
     name: "Nasi Putih Jasmine",
     category: "Ala Carte",
     price: 5000,
     image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=400",
     isAvailable: true,
     recipe: [{ ingredientId: "ing-5", quantityNeeded: 0.08 }],
+  },
+];
+
+const DEFAULT_EXPENSES = [
+  {
+    id: "exp-1",
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Sewa Ruko Bulanan",
+    category: "lainnya",
+    amount: 1500000,
+  },
+  {
+    id: "exp-2",
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Pembayaran Listrik Toko Bulanan",
+    category: "listrik",
+    amount: 1200000,
+  },
+  {
+    id: "exp-3",
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Pengisian Tabung Gas 12kg",
+    category: "gas",
+    amount: 210000,
+  },
+  {
+    id: "exp-4",
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Gaji Karyawan Shift Pagi",
+    category: "gaji",
+    amount: 1500000,
+  },
+  {
+    id: "exp-5",
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    description: "Biaya Kebersihan Lingkungan RW",
+    category: "lainnya",
+    amount: 150000,
+  },
+];
+
+const DEFAULT_WASTAGE = [
+  {
+    id: "wast-1",
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    ingredientId: "ing-1",
+    ingredientName: "Ayam Potong Segar",
+    quantity: 5,
+    unit: "pcs",
+    costPerUnit: 6000,
+    totalCost: 30000,
+    reason: "Ayam lewat hari / basi",
+  },
+  {
+    id: "wast-2",
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    ingredientId: "ing-2",
+    ingredientName: "Tepung Bumbu Krispi",
+    quantity: 1,
+    unit: "kg",
+    costPerUnit: 15000,
+    totalCost: 15000,
+    reason: "Tepung basah terkena air",
+  },
+  {
+    id: "wast-3",
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    ingredientId: "ing-3",
+    ingredientName: "Minyak Goreng Sawit",
+    quantity: 2,
+    unit: "liter",
+    costPerUnit: 14000,
+    totalCost: 28000,
+    reason: "Tumpah saat pengisian wajan",
+  },
+  {
+    id: "wast-4",
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    ingredientId: "ing-4",
+    ingredientName: "Cabe Rawit Merah",
+    quantity: 0.5,
+    unit: "kg",
+    costPerUnit: 40000,
+    totalCost: 20000,
+    reason: "Cabe membusuk",
+  },
+  {
+    id: "wast-5",
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    ingredientId: "ing-5",
+    ingredientName: "Beras Jasmine Super",
+    quantity: 1,
+    unit: "kg",
+    costPerUnit: 13000,
+    totalCost: 13000,
+    reason: "Beras berkutu",
   },
 ];
 
@@ -409,7 +445,19 @@ async function runSqlMigrations(): Promise<string> {
       seededCount++;
     }
 
-    // 4. Sales, Expenses, and Wastage start completely empty for a dynamic real-world system without mock data.
+    // 4. Expenses
+    const expensesList = await fetchCollection("expenses");
+    if (expensesList.length === 0) {
+      await saveCollection("expenses", DEFAULT_EXPENSES);
+      seededCount++;
+    }
+
+    // 5. Wastage
+    const wastageList = await fetchCollection("wastage");
+    if (wastageList.length === 0) {
+      await saveCollection("wastage", DEFAULT_WASTAGE);
+      seededCount++;
+    }
 
     // 7. Store Settings
     try {
@@ -451,8 +499,8 @@ async function runSqlReset(): Promise<string> {
       ingredients: DEFAULT_INGREDIENTS,
       products: DEFAULT_PRODUCTS,
       sales: [],
-      expenses: [],
-      wastage: [],
+      expenses: DEFAULT_EXPENSES,
+      wastage: DEFAULT_WASTAGE,
       storeSettings: {
         storeName: "BFC Geprek Aruji",
         storeTagline: "Berkah Fried Chicken",
@@ -487,11 +535,12 @@ async function runSqlReset(): Promise<string> {
       console.warn("Failed to delete store settings on reset:", err);
     }
 
-    // Re-seed Users, Ingredients, Products and Store Settings
+    // Re-seed Users, Ingredients, Products, Expenses, Wastage and Store Settings
     await saveCollection("users", PRESET_USERS);
     await saveCollection("ingredients", DEFAULT_INGREDIENTS);
     await saveCollection("products", DEFAULT_PRODUCTS);
-    // sales, expenses, and wastage are kept completely empty.
+    await saveCollection("expenses", DEFAULT_EXPENSES);
+    await saveCollection("wastage", DEFAULT_WASTAGE);
 
     await saveStoreSettings({
       storeName: "BFC Geprek Aruji",
@@ -505,8 +554,8 @@ async function runSqlReset(): Promise<string> {
       ingredients: DEFAULT_INGREDIENTS,
       products: DEFAULT_PRODUCTS,
       sales: [],
-      expenses: [],
-      wastage: [],
+      expenses: DEFAULT_EXPENSES,
+      wastage: DEFAULT_WASTAGE,
       storeSettings: {
         storeName: "BFC Geprek Aruji",
         storeTagline: "Berkah Fried Chicken",
