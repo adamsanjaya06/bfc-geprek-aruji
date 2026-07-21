@@ -23,7 +23,8 @@ import {
   syncWithBackend
 } from "./utils/db";
 import { Product, Ingredient, Sale, User } from "./types";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle, Menu } from "lucide-react";
+import { getStoreSettings } from "./components/SettingsView";
 
 export default function App() {
   // Session User Authentication state
@@ -36,6 +37,10 @@ export default function App() {
   
   // Navigation states
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Store information state
+  const [storeSettings, setStoreSettings] = useState(getStoreSettings());
 
   // Clock state
   const [liveTime, setLiveTime] = useState<Date>(new Date());
@@ -61,6 +66,7 @@ export default function App() {
     setProducts(getProducts());
     setIngredients(getIngredients());
     setSales(getSales());
+    setStoreSettings(getStoreSettings());
   };
 
   // Low Stock Notification list
@@ -151,7 +157,7 @@ export default function App() {
           />
         );
       case "settings":
-        return <SettingsView />;
+        return <SettingsView onSettingsUpdate={() => setStoreSettings(getStoreSettings())} />;
       default:
         return (
           <div className="bg-white p-8 rounded-2xl border border-stone-200 text-center text-stone-500">
@@ -177,6 +183,14 @@ export default function App() {
   return (
     <div id="app-root-layout" className="flex bg-bento-bg min-h-screen text-bento-text font-sans">
       
+      {/* Mobile Sidebar Backdrop Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Dynamic Navigation Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -184,36 +198,50 @@ export default function App() {
         ingredients={ingredients}
         user={user}
         onLogout={() => setUser(null)}
+        storeName={storeSettings.storeName}
+        storeTagline={storeSettings.storeTagline}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* Main Workspace Frame container */}
-      <main id="main-workspace" className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main id="main-workspace" className="flex-1 flex flex-col h-screen overflow-hidden w-full">
         
         {/* Top Operational bar info */}
-        <header id="workspace-header" className="bg-white/60 backdrop-blur-md border-b border-bento-border/50 px-8 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0 shadow-xs">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-bento-red bg-bento-light-orange px-2.5 py-1 rounded-full border border-bento-border/60 shadow-xs">
-              SISTEM AKTIF • ROLE: {user.role.toUpperCase()}
-            </span>
+        <header id="workspace-header" className="bg-white/60 backdrop-blur-md border-b border-bento-border/50 px-4 sm:px-8 py-4 flex justify-between items-center gap-3 shrink-0 shadow-xs">
+          <div className="flex items-center gap-3">
+            {/* Hamburger Menu Trigger for mobile */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2.5 rounded-xl text-bento-text hover:bg-stone-100 transition-colors cursor-pointer border border-bento-border/60 shadow-xs bg-white flex items-center justify-center shrink-0"
+              title="Buka Menu"
+            >
+              <Menu className="w-5 h-5 text-bento-maroon" />
+            </button>
+            
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-bento-red bg-bento-light-orange px-2.5 py-1 rounded-full border border-bento-border/60 shadow-xs">
+                SISTEM AKTIF • ROLE: {user.role.toUpperCase()}
+              </span>
+            </div>
           </div>
 
           {/* Operational live clock */}
           <div className="flex items-center gap-2 text-bento-text-muted bg-white/80 px-3.5 py-1.5 rounded-xl border border-bento-border text-xs font-bold font-mono shadow-sm">
             <Clock className="w-4 h-4 text-bento-orange shrink-0 animate-pulse" />
-            <span id="live-clock">{formatLiveDateTime(liveTime)}</span>
+            <span id="live-clock" className="hidden sm:inline">{formatLiveDateTime(liveTime)}</span>
+            <span id="live-clock-mobile" className="sm:hidden">{liveTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
           </div>
         </header>
 
         {/* Global Low Stock Notification Alert Banner */}
         {lowStockIngredients.length > 0 && (
-          <div className="bg-amber-50 border-b border-amber-200 px-8 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-amber-900 text-xs font-bold shrink-0">
+          <div className="bg-amber-50 border-b border-amber-200 px-4 sm:px-8 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-amber-900 text-xs font-bold shrink-0">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+              <span className="w-2 h-2 rounded-full bg-red-600 animate-ping shrink-0"></span>
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-              <span>
-                Peringatan Stok Kritis: Ada {lowStockIngredients.length} bahan baku (
-                {lowStockIngredients.slice(0, 3).map(i => i.name).join(", ")}
-                {lowStockIngredients.length > 3 ? "..." : ""}) yang menipis di bawah batas minimum!
+              <span className="text-center sm:text-left">
+                Peringatan Stok Kritis: Ada {lowStockIngredients.length} bahan baku yang menipis!
               </span>
             </div>
             <button 
@@ -226,7 +254,7 @@ export default function App() {
         )}
 
         {/* Scrollable Canvas for views */}
-        <section id="workspace-scrollable-content" className="flex-1 overflow-y-auto p-8">
+        <section id="workspace-scrollable-content" className="flex-1 overflow-y-auto p-4 sm:p-8">
           {renderActiveView()}
         </section>
 

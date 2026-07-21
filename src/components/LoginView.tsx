@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Lock, User, Drumstick, ArrowRight, ShieldCheck, ShoppingCart, BarChart3, AlertCircle } from "lucide-react";
 import { User as UserType } from "../types";
+import { getStoreSettings } from "./SettingsView";
 
 interface LoginViewProps {
   onLoginSuccess: (user: UserType) => void;
 }
 
 export default function LoginView({ onLoginSuccess }: LoginViewProps) {
+  const storeSettings = getStoreSettings();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -95,9 +97,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           <div className="inline-flex items-center justify-center bg-bento-maroon text-bento-gold p-4 rounded-2xl shadow-xl shadow-orange-950/10 mb-4 border border-white/10">
             <Drumstick className="w-8 h-8 text-bento-gold" />
           </div>
-          <h2 className="text-2xl font-black text-bento-header tracking-tight">BFC Geprek Aruji</h2>
+          <h2 className="text-2xl font-black text-bento-header tracking-tight">{storeSettings.storeName}</h2>
           <p className="text-[11px] text-bento-text-muted mt-1 font-bold uppercase tracking-widest">
-            Berkah Fried Chicken
+            {storeSettings.storeTagline}
           </p>
         </div>
 

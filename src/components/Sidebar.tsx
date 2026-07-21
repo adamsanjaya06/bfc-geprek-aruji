@@ -16,7 +16,8 @@ import {
   LogOut,
   Coins,
   ShoppingBag,
-  Settings
+  Settings,
+  X
 } from "lucide-react";
 import { Ingredient, User as UserType } from "../types";
 
@@ -26,6 +27,10 @@ interface SidebarProps {
   ingredients: Ingredient[];
   user: UserType;
   onLogout: () => void;
+  storeName: string;
+  storeTagline: string;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export default function Sidebar({ 
@@ -33,7 +38,11 @@ export default function Sidebar({
   setCurrentTab, 
   ingredients, 
   user,
-  onLogout 
+  onLogout,
+  storeName,
+  storeTagline,
+  isOpen,
+  onClose
 }: SidebarProps) {
   // Check how many ingredients are below their minimum stock
   const lowStockCount = ingredients.filter(ing => ing.stock <= ing.minStock).length;
@@ -65,17 +74,33 @@ export default function Sidebar({
   }
 
   return (
-    <aside id="sidebar-nav" className="w-64 bg-bento-maroon text-white flex flex-col justify-between h-screen sticky top-0 border-r border-bento-border/20 shadow-xl">
+    <aside 
+      id="sidebar-nav" 
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-bento-maroon text-white flex flex-col justify-between h-screen border-r border-bento-border/20 shadow-xl transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:translate-x-0 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       <div>
         {/* Brand Logo Header */}
-        <div className="p-6 border-b border-white/10 flex items-center gap-3">
-          <div className="bg-bento-gold text-bento-maroon p-2.5 rounded-xl shadow-lg font-black text-xl flex items-center justify-center">
-            <Drumstick className="w-6 h-6 text-bento-maroon" />
+        <div className="p-6 border-b border-white/10 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="bg-bento-gold text-bento-maroon p-2.5 rounded-xl shadow-lg font-black text-xl flex items-center justify-center">
+              <Drumstick className="w-6 h-6 text-bento-maroon" />
+            </div>
+            <div>
+              <h1 className="font-extrabold text-base tracking-tight text-white leading-tight">{storeName}</h1>
+              <p className="text-[11px] text-bento-gold font-medium">{storeTagline}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-extrabold text-base tracking-tight text-white leading-tight">BFC Geprek Aruji</h1>
-            <p className="text-[11px] text-bento-gold font-medium">Berkah Fried Chicken</p>
-          </div>
+          
+          {/* Close button for mobile */}
+          <button 
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            title="Tutup Menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Navigation Tabs */}
@@ -87,7 +112,10 @@ export default function Sidebar({
               <button
                 key={item.id}
                 id={`nav-tab-${item.id}`}
-                onClick={() => setCurrentTab(item.id)}
+                onClick={() => {
+                  setCurrentTab(item.id);
+                  onClose();
+                }}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-left font-semibold text-sm group ${
                   isActive
                     ? "bg-bento-orange text-white shadow-md shadow-orange-950/30"
@@ -126,7 +154,10 @@ export default function Sidebar({
 
         <button
           id="logout-btn"
-          onClick={onLogout}
+          onClick={() => {
+            onLogout();
+            onClose();
+          }}
           className="w-full py-2 bg-white/5 hover:bg-bento-red text-white hover:text-white border border-white/10 hover:border-bento-red rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5 text-bento-gold" />
@@ -134,7 +165,7 @@ export default function Sidebar({
         </button>
 
         <p className="text-[9px] text-white/30 text-center font-bold">
-          Sistem POS BFC Geprek Aruji v1.2 • Bento Grid
+          Sistem POS {storeName} v1.2 • Bento Grid
         </p>
       </div>
     </aside>

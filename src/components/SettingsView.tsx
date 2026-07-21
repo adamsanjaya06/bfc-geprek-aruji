@@ -80,7 +80,11 @@ export const saveStoredUsers = (users: (User & { password?: string })[]): void =
   pushToBackend(undefined, undefined, undefined, undefined, undefined, undefined, users);
 };
 
-export default function SettingsView() {
+interface SettingsViewProps {
+  onSettingsUpdate?: () => void;
+}
+
+export default function SettingsView({ onSettingsUpdate }: SettingsViewProps) {
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(getStoreSettings());
   const [users, setUsers] = useState<(User & { password?: string })[]>(getStoredUsers());
 
@@ -109,6 +113,9 @@ export default function SettingsView() {
 
     saveStoreSettings(storeSettings);
     setStoreSuccess("Profil informasi toko berhasil diperbarui!");
+    if (onSettingsUpdate) {
+      onSettingsUpdate();
+    }
     setTimeout(() => setStoreSuccess(""), 3000);
   };
 
