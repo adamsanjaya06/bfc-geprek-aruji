@@ -491,8 +491,6 @@ export function processSale(cart: CartItem[], paymentAmount: number, cashierName
     return { ...ing, stock: Math.max(0, Math.round(newStock * 1000) / 1000) };
   });
 
-  saveIngredients(updatedIngredients);
-
   // Record Sale transaction
   const sales = getSales();
   const nextInvoiceNum = sales.length + 1001;
@@ -512,7 +510,11 @@ export function processSale(cart: CartItem[], paymentAmount: number, cashierName
   };
 
   sales.push(newSale);
-  saveSales(sales);
+
+  // Save both locally in one atomic stroke and sync to backend combined
+  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(updatedIngredients));
+  localStorage.setItem(LOCAL_STORAGE_KEYS.SALES, JSON.stringify(sales));
+  pushToBackend(updatedIngredients, undefined, sales);
 
   return { success: true, sale: newSale };
 }
@@ -530,7 +532,6 @@ export function recordWastage(ingredientId: string, quantity: number, reason: st
 
   // Subtract stock
   ingredient.stock = Math.max(0, Math.round((ingredient.stock - quantity) * 1000) / 1000);
-  saveIngredients(ingredients);
 
   // Record wastage
   const wastages = getWastage();
@@ -547,7 +548,11 @@ export function recordWastage(ingredientId: string, quantity: number, reason: st
     reason,
   };
   wastages.unshift(newWastage); // Put new at the top
-  saveWastage(wastages);
+
+  // Save both locally and push as a combined payload to the backend
+  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
+  localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(wastages));
+  pushToBackend(ingredients, undefined, undefined, undefined, wastages);
 
   return { success: true };
 }
@@ -571,7 +576,6 @@ export function editWastage(wastageId: string, newQuantity: number, newReason: s
     }
     // Update ingredient stock
     ingredient.stock = Math.max(0, Math.round((ingredient.stock - diff) * 1000) / 1000);
-    saveIngredients(ingredients);
   }
 
   // Update wastage record
@@ -579,7 +583,11 @@ export function editWastage(wastageId: string, newQuantity: number, newReason: s
   wastage.reason = newReason;
   wastage.totalCost = Math.round(newQuantity * wastage.costPerUnit);
 
-  saveWastage(wastages);
+  // Save both locally and sync to backend as a combined single update
+  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
+  localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(wastages));
+  pushToBackend(ingredients, undefined, undefined, undefined, wastages);
+
   return { success: true };
 }
 
@@ -597,12 +605,15 @@ export function deleteWastage(wastageId: string): { success: boolean; error?: st
     const ingredient = ingredients[ingIndex];
     // Restore the ingredient stock from deleted wastage
     ingredient.stock = Math.round((ingredient.stock + wastage.quantity) * 1000) / 1000;
-    saveIngredients(ingredients);
   }
 
   // Remove wastage record
   const updatedWastages = wastages.filter(w => w.id !== wastageId);
-  saveWastage(updatedWastages);
+
+  // Save both locally and sync to backend combined
+  localStorage.setItem(LOCAL_STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
+  localStorage.setItem(LOCAL_STORAGE_KEYS.WASTAGE, JSON.stringify(updatedWastages));
+  pushToBackend(ingredients, undefined, undefined, undefined, updatedWastages);
 
   return { success: true };
 }

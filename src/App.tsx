@@ -96,6 +96,17 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Periodic automatic sync with Firebase Firestore (every 4 seconds)
+  useEffect(() => {
+    if (!user) return;
+    const syncInterval = setInterval(() => {
+      syncWithBackend().then(() => {
+        refreshDbStates();
+      });
+    }, 4000);
+    return () => clearInterval(syncInterval);
+  }, [user]);
+
   // Sync state from LocalStorage database
   const refreshDbStates = () => {
     setProducts(getProducts());

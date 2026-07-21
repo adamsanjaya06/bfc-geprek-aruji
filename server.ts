@@ -298,10 +298,13 @@ async function saveCollection(collectionName: string, items: any[]): Promise<voi
     const existingIds = snapshot.docs.map(doc => doc.id);
     const newIds = new Set(items.map(item => String(item.id)));
 
-    // Clean deleted documents
-    for (const id of existingIds) {
-      if (!newIds.has(id)) {
-        await deleteDoc(doc(db, collectionName, id));
+    // Clean deleted documents (only for collections that support deletion)
+    const deletableCollections = ["products", "wastage"];
+    if (deletableCollections.includes(collectionName)) {
+      for (const id of existingIds) {
+        if (!newIds.has(id)) {
+          await deleteDoc(doc(db, collectionName, id));
+        }
       }
     }
 
