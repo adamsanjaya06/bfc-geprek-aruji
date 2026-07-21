@@ -278,9 +278,13 @@ export default function App() {
               <Menu className="w-5 h-5 text-bento-maroon" />
             </button>
             
-            <div>
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-bento-red bg-bento-light-orange px-2.5 py-1 rounded-full border border-bento-border/60 shadow-xs">
                 SISTEM AKTIF • ROLE: {user.role.toUpperCase()}
+              </span>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60 shadow-xs flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                FIREBASE TERKONEKSI (REALTIME)
               </span>
             </div>
           </div>

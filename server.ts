@@ -335,7 +335,7 @@ async function saveCollection(collectionName: string, items: any[]): Promise<voi
     const newIds = new Set(items.map(item => String(item.id)));
 
     // Clean deleted documents (only for collections that support deletion)
-    const deletableCollections = ["products", "wastage"];
+    const deletableCollections = ["products", "ingredients", "sales", "expenses", "wastage", "users"];
     if (deletableCollections.includes(collectionName)) {
       for (const id of existingIds) {
         if (!newIds.has(id)) {

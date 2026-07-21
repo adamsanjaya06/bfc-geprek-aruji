@@ -28,8 +28,18 @@ const dbCache = {
   users: [] as User[],
 };
 
+// Synchronization guards to prevent race conditions / rubber-banding
+let lastPushTime = 0;
+let activePushes = 0;
+
 // Periodic automatic sync with Firebase Firestore
 export async function syncWithBackend(): Promise<void> {
+  // If we have active pushes or recently pushed within 3 seconds, skip GET sync
+  // to avoid overwriting newer local updates with stale backend states.
+  if (activePushes > 0 || Date.now() - lastPushTime < 3000) {
+    return;
+  }
+
   try {
     const res = await fetch("/api/sync/state");
     if (res.ok) {
@@ -66,6 +76,9 @@ export async function pushToBackend(
   if (storeSettings) dbCache.storeSettings = storeSettings;
   if (users) dbCache.users = users;
 
+  lastPushTime = Date.now();
+  activePushes++;
+
   try {
     await fetch("/api/sync/state", {
       method: "POST",
@@ -74,6 +87,8 @@ export async function pushToBackend(
     });
   } catch (err) {
     console.warn("Backend state sync failed:", err);
+  } finally {
+    activePushes = Math.max(0, activePushes - 1);
   }
 }
 
