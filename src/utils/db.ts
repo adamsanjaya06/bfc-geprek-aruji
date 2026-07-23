@@ -28,50 +28,12 @@ const dbCache = {
   users: [] as User[],
 };
 
-const LOCAL_STORAGE_KEY = "bfc_pos_db_cache";
-
-function loadFromLocalStorage() {
-  try {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed.ingredients) && parsed.ingredients.length > 0) {
-        dbCache.ingredients = parsed.ingredients;
-      }
-      if (Array.isArray(parsed.products) && parsed.products.length > 0) {
-        dbCache.products = parsed.products;
-      }
-      if (Array.isArray(parsed.sales) && parsed.sales.length > 0) {
-        dbCache.sales = parsed.sales;
-      }
-      if (Array.isArray(parsed.expenses) && parsed.expenses.length > 0) {
-        dbCache.expenses = parsed.expenses;
-      }
-      if (Array.isArray(parsed.wastage) && parsed.wastage.length > 0) {
-        dbCache.wastage = parsed.wastage;
-      }
-      if (parsed.storeSettings && parsed.storeSettings.storeName) {
-        dbCache.storeSettings = parsed.storeSettings;
-      }
-      if (Array.isArray(parsed.users) && parsed.users.length > 0) {
-        dbCache.users = parsed.users;
-      }
-    }
-  } catch (err) {
-    console.warn("Failed loading dbCache from localStorage:", err);
-  }
+// Purge legacy localStorage database cache to ensure all devices display 100% synchronized Firestore data
+try {
+  localStorage.removeItem("bfc_pos_db_cache");
+} catch (e) {
+  // Ignore
 }
-
-function saveToLocalStorage() {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dbCache));
-  } catch (err) {
-    console.warn("Failed saving dbCache to localStorage:", err);
-  }
-}
-
-// Auto-initialize from local storage
-loadFromLocalStorage();
 
 // Synchronization guards and change subscription mechanism
 let lastPushTime = 0;
@@ -88,7 +50,6 @@ export function subscribeToDbChanges(listener: DbChangeListener): () => void {
 }
 
 function notifyDbChanges() {
-  saveToLocalStorage();
   listeners.forEach(l => {
     try {
       l();
@@ -275,7 +236,7 @@ export async function pushToBackend(
 }
 
 export function initializeDb(force = false): void {
-  loadFromLocalStorage();
+  syncWithBackend();
 }
 
 export function getProducts(): Product[] {
