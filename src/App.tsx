@@ -110,14 +110,28 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // Periodic automatic sync with Firebase Firestore (every 1 second for seamless multiplayer)
+  // Periodic automatic sync with Firebase Firestore (every 1 second for seamless multi-device real-time sync)
   useEffect(() => {
-    if (!user) return;
+    // Initial sync
+    syncWithBackend();
+
     const syncInterval = setInterval(() => {
       syncWithBackend();
     }, 1000);
-    return () => clearInterval(syncInterval);
-  }, [user]);
+
+    const handleFocusOrVisibility = () => {
+      syncWithBackend();
+    };
+
+    window.addEventListener("focus", handleFocusOrVisibility);
+    window.addEventListener("visibilitychange", handleFocusOrVisibility);
+
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener("focus", handleFocusOrVisibility);
+      window.removeEventListener("visibilitychange", handleFocusOrVisibility);
+    };
+  }, []);
 
   // Sync in-memory states to React to trigger component re-renders
   const refreshDbStates = () => {

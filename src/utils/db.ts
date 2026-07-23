@@ -100,8 +100,8 @@ function notifyDbChanges() {
 
 // Periodic automatic sync with Firebase Firestore
 export async function syncWithBackend(): Promise<void> {
-  // If we have active pushes, skip GET sync to avoid race conditions
-  if (activePushes > 0) {
+  // If we have active pushes in the last 2 seconds, skip GET sync to avoid race conditions
+  if (activePushes > 0 && Date.now() - lastPushTime < 2000) {
     return;
   }
 
@@ -112,54 +112,36 @@ export async function syncWithBackend(): Promise<void> {
       let changed = false;
 
       if (data.ingredients && Array.isArray(data.ingredients)) {
-        const backendIds = new Set(data.ingredients.map((i: any) => i.id));
-        const localOnly = dbCache.ingredients.filter(i => !backendIds.has(i.id));
-        const merged = [...data.ingredients, ...localOnly];
-        if (JSON.stringify(merged) !== JSON.stringify(dbCache.ingredients)) {
-          dbCache.ingredients = merged;
+        if (JSON.stringify(data.ingredients) !== JSON.stringify(dbCache.ingredients)) {
+          dbCache.ingredients = data.ingredients;
           changed = true;
-          if (localOnly.length > 0) {
-            pushToBackend(merged);
-          }
         }
       }
 
       if (data.products && Array.isArray(data.products)) {
-        const backendIds = new Set(data.products.map((p: any) => p.id));
-        const localOnly = dbCache.products.filter(p => !backendIds.has(p.id));
-        const merged = [...data.products, ...localOnly];
-        if (JSON.stringify(merged) !== JSON.stringify(dbCache.products)) {
-          dbCache.products = merged;
+        if (JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
+          dbCache.products = data.products;
           changed = true;
         }
       }
 
       if (data.sales && Array.isArray(data.sales)) {
-        const backendIds = new Set(data.sales.map((s: any) => s.id));
-        const localOnly = dbCache.sales.filter(s => !backendIds.has(s.id));
-        const merged = [...data.sales, ...localOnly];
-        if (JSON.stringify(merged) !== JSON.stringify(dbCache.sales)) {
-          dbCache.sales = merged;
+        if (JSON.stringify(data.sales) !== JSON.stringify(dbCache.sales)) {
+          dbCache.sales = data.sales;
           changed = true;
         }
       }
 
       if (data.expenses && Array.isArray(data.expenses)) {
-        const backendIds = new Set(data.expenses.map((e: any) => e.id));
-        const localOnly = dbCache.expenses.filter(e => !backendIds.has(e.id));
-        const merged = [...data.expenses, ...localOnly];
-        if (JSON.stringify(merged) !== JSON.stringify(dbCache.expenses)) {
-          dbCache.expenses = merged;
+        if (JSON.stringify(data.expenses) !== JSON.stringify(dbCache.expenses)) {
+          dbCache.expenses = data.expenses;
           changed = true;
         }
       }
 
       if (data.wastage && Array.isArray(data.wastage)) {
-        const backendIds = new Set(data.wastage.map((w: any) => w.id));
-        const localOnly = dbCache.wastage.filter(w => !backendIds.has(w.id));
-        const merged = [...data.wastage, ...localOnly];
-        if (JSON.stringify(merged) !== JSON.stringify(dbCache.wastage)) {
-          dbCache.wastage = merged;
+        if (JSON.stringify(data.wastage) !== JSON.stringify(dbCache.wastage)) {
+          dbCache.wastage = data.wastage;
           changed = true;
         }
       }
@@ -250,20 +232,40 @@ export async function pushToBackend(
     });
     if (res.ok) {
       const data = await res.json();
-      // Instantly apply state returned by backend while merging local items
-      if (data.products) dbCache.products = data.products;
-      if (data.ingredients && Array.isArray(data.ingredients)) {
-        const backendIds = new Set(data.ingredients.map((i: any) => i.id));
-        const localOnly = dbCache.ingredients.filter(i => !backendIds.has(i.id));
-        dbCache.ingredients = [...data.ingredients, ...localOnly];
-      }
-      if (data.sales) dbCache.sales = data.sales;
-      if (data.expenses) dbCache.expenses = data.expenses;
-      if (data.wastage) dbCache.wastage = data.wastage;
-      if (data.storeSettings) dbCache.storeSettings = data.storeSettings;
-      if (data.users) dbCache.users = data.users;
+      let changed = false;
 
-      notifyDbChanges();
+      if (data.products && Array.isArray(data.products) && JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
+        dbCache.products = data.products;
+        changed = true;
+      }
+      if (data.ingredients && Array.isArray(data.ingredients) && JSON.stringify(data.ingredients) !== JSON.stringify(dbCache.ingredients)) {
+        dbCache.ingredients = data.ingredients;
+        changed = true;
+      }
+      if (data.sales && Array.isArray(data.sales) && JSON.stringify(data.sales) !== JSON.stringify(dbCache.sales)) {
+        dbCache.sales = data.sales;
+        changed = true;
+      }
+      if (data.expenses && Array.isArray(data.expenses) && JSON.stringify(data.expenses) !== JSON.stringify(dbCache.expenses)) {
+        dbCache.expenses = data.expenses;
+        changed = true;
+      }
+      if (data.wastage && Array.isArray(data.wastage) && JSON.stringify(data.wastage) !== JSON.stringify(dbCache.wastage)) {
+        dbCache.wastage = data.wastage;
+        changed = true;
+      }
+      if (data.storeSettings && JSON.stringify(data.storeSettings) !== JSON.stringify(dbCache.storeSettings)) {
+        dbCache.storeSettings = data.storeSettings;
+        changed = true;
+      }
+      if (data.users && Array.isArray(data.users) && JSON.stringify(data.users) !== JSON.stringify(dbCache.users)) {
+        dbCache.users = data.users;
+        changed = true;
+      }
+
+      if (changed) {
+        notifyDbChanges();
+      }
     }
   } catch (err) {
     console.warn("Backend state sync failed:", err);

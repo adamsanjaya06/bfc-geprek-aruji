@@ -310,19 +310,6 @@ async function fetchCollection(collectionName: string): Promise<any[]> {
       items.push({ id: doc.id, ...doc.data() });
     });
 
-    // Safety merge with local fallback DB to ensure newly added items are never lost
-    const localDb = loadFallbackDb();
-    const fallbackItems = (localDb as any)[collectionName] || [];
-    if (fallbackItems.length > items.length) {
-      const firestoreIds = new Set(items.map((i: any) => i.id));
-      const missingFromFirestore = fallbackItems.filter((i: any) => !firestoreIds.has(i.id));
-      if (missingFromFirestore.length > 0) {
-        items.push(...missingFromFirestore);
-        // Silently backfill missing items into Firestore
-        saveCollection(collectionName, items).catch(e => console.warn("Background backfill failed:", e.message));
-      }
-    }
-
     logDb(`/* Firestore READ */ SELECT * FROM ${collectionName};`, true, Date.now() - startTime);
     return items;
   } catch (err: any) {
