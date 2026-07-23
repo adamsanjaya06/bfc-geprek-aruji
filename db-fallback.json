@@ -47,6 +47,14 @@
       "unit": "botol",
       "minStock": 2,
       "cost": 25000
+    },
+    {
+      "id": "ing-test-persistent-1784804923019",
+      "name": "Saus Sambal Extra Pedas",
+      "stock": 50,
+      "unit": "botol",
+      "minStock": 5,
+      "cost": 12000
     }
   ],
   "products": [

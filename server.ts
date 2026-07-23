@@ -743,7 +743,7 @@ app.post("/api/auth/login", async (req, res) => {
 // Sync State API endpoints
 // Helper to read and format all collections from Firebase Firestore
 async function getFullDbState(): Promise<any> {
-  let [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
+  const [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
     fetchCollection("ingredients"),
     fetchCollection("products"),
     fetchCollection("sales"),
@@ -752,23 +752,6 @@ async function getFullDbState(): Promise<any> {
     fetchCollection("users"),
     fetchStoreSettings(),
   ]);
-
-  if (ingredients.length === 0 || products.length === 0) {
-    try {
-      await runSqlMigrations();
-      [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
-        fetchCollection("ingredients"),
-        fetchCollection("products"),
-        fetchCollection("sales"),
-        fetchCollection("expenses"),
-        fetchCollection("wastage"),
-        fetchCollection("users"),
-        fetchStoreSettings(),
-      ]);
-    } catch (e: any) {
-      console.warn("Auto-migration in getFullDbState failed:", e.message);
-    }
-  }
 
   const formattedIngredients = ingredients.map(ing => ({
     id: ing.id,

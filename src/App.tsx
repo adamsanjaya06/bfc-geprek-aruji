@@ -24,12 +24,15 @@ import {
   getExpenses,
   getWastage,
   getStoreSettings,
-  subscribeToDbChanges
+  subscribeToDbChanges,
+  isDbLoaded
 } from "./utils/db";
 import { Product, Ingredient, Sale, User, Expense, Wastage } from "./types";
 import { Clock, AlertTriangle, Menu } from "lucide-react";
 
 export default function App() {
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
   // Session User Authentication state with localStorage persistence
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("bfc_pos_user");
@@ -43,15 +46,12 @@ export default function App() {
     return null;
   });
 
-  // Initialize and load database states immediately from cache
-  const [products, setProducts] = useState<Product[]>(() => {
-    initializeDb();
-    return getProducts();
-  });
-  const [ingredients, setIngredients] = useState<Ingredient[]>(() => getIngredients());
-  const [sales, setSales] = useState<Sale[]>(() => getSales());
-  const [expenses, setExpenses] = useState<Expense[]>(() => getExpenses());
-  const [wastages, setWastages] = useState<Wastage[]>(() => getWastage());
+  // Initialize and load database states
+  const [products, setProducts] = useState<Product[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [wastages, setWastages] = useState<Wastage[]>([]);
   
   // Navigation states with localStorage persistence
   const [currentTab, setCurrentTabState] = useState<string>(() => {
@@ -88,10 +88,14 @@ export default function App() {
   // Clock state
   const [liveTime, setLiveTime] = useState<Date>(new Date());
 
-  // First-time database boot, sync with backend, and loading
+  // First-time database boot: sync with Firebase Firestore directly
   useEffect(() => {
-    initializeDb();
-    syncWithBackend();
+    async function boot() {
+      await syncWithBackend();
+      refreshDbStates();
+      setIsInitialLoading(false);
+    }
+    boot();
   }, []);
 
   // Operational real-time live clock ticking
@@ -247,6 +251,17 @@ export default function App() {
         );
     }
   };
+
+  // Guard: if database is loading initial state from Firestore
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-stone-900 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-lg font-semibold text-amber-400">Menghubungkan ke Firebase Firestore...</p>
+        <p className="text-sm text-stone-400 mt-1">Memuat data secara langsung dari Cloud Firestore (Tanpa Local Storage Cache)</p>
+      </div>
+    );
+  }
 
   // Guard: if user is not authenticated, render Login Page
   if (!user) {

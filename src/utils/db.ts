@@ -38,6 +38,8 @@ try {
 // Synchronization guards and change subscription mechanism
 let lastPushTime = 0;
 let activePushes = 0;
+let isInitialSyncDone = false;
+let syncPromise: Promise<void> | null = null;
 
 type DbChangeListener = () => void;
 const listeners = new Set<DbChangeListener>();
@@ -59,6 +61,10 @@ function notifyDbChanges() {
   });
 }
 
+export function isDbLoaded(): boolean {
+  return isInitialSyncDone;
+}
+
 // Periodic automatic sync with Firebase Firestore
 export async function syncWithBackend(): Promise<void> {
   // If we have active pushes or recent push in the last 4 seconds, skip GET sync to avoid race conditions
@@ -66,64 +72,74 @@ export async function syncWithBackend(): Promise<void> {
     return;
   }
 
-  try {
-    const res = await fetch("/api/sync/state");
-    if (res.ok) {
-      const data = await res.json();
-      let changed = false;
+  if (syncPromise) return syncPromise;
 
-      if (data.ingredients && Array.isArray(data.ingredients)) {
-        if (JSON.stringify(data.ingredients) !== JSON.stringify(dbCache.ingredients)) {
-          dbCache.ingredients = data.ingredients;
-          changed = true;
+  syncPromise = (async () => {
+    try {
+      const res = await fetch("/api/sync/state");
+      if (res.ok) {
+        const data = await res.json();
+        let changed = false;
+
+        if (data.ingredients && Array.isArray(data.ingredients)) {
+          if (JSON.stringify(data.ingredients) !== JSON.stringify(dbCache.ingredients)) {
+            dbCache.ingredients = data.ingredients;
+            changed = true;
+          }
+        }
+
+        if (data.products && Array.isArray(data.products)) {
+          if (JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
+            dbCache.products = data.products;
+            changed = true;
+          }
+        }
+
+        if (data.sales && Array.isArray(data.sales)) {
+          if (JSON.stringify(data.sales) !== JSON.stringify(dbCache.sales)) {
+            dbCache.sales = data.sales;
+            changed = true;
+          }
+        }
+
+        if (data.expenses && Array.isArray(data.expenses)) {
+          if (JSON.stringify(data.expenses) !== JSON.stringify(dbCache.expenses)) {
+            dbCache.expenses = data.expenses;
+            changed = true;
+          }
+        }
+
+        if (data.wastage && Array.isArray(data.wastage)) {
+          if (JSON.stringify(data.wastage) !== JSON.stringify(dbCache.wastage)) {
+            dbCache.wastage = data.wastage;
+            changed = true;
+          }
+        }
+
+        if (data.storeSettings && JSON.stringify(data.storeSettings) !== JSON.stringify(dbCache.storeSettings)) { 
+          dbCache.storeSettings = data.storeSettings; 
+          changed = true; 
+        }
+
+        if (data.users && Array.isArray(data.users) && JSON.stringify(data.users) !== JSON.stringify(dbCache.users)) { 
+          dbCache.users = data.users; 
+          changed = true; 
+        }
+
+        isInitialSyncDone = true;
+
+        if (changed) {
+          notifyDbChanges();
         }
       }
-
-      if (data.products && Array.isArray(data.products)) {
-        if (JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
-          dbCache.products = data.products;
-          changed = true;
-        }
-      }
-
-      if (data.sales && Array.isArray(data.sales)) {
-        if (JSON.stringify(data.sales) !== JSON.stringify(dbCache.sales)) {
-          dbCache.sales = data.sales;
-          changed = true;
-        }
-      }
-
-      if (data.expenses && Array.isArray(data.expenses)) {
-        if (JSON.stringify(data.expenses) !== JSON.stringify(dbCache.expenses)) {
-          dbCache.expenses = data.expenses;
-          changed = true;
-        }
-      }
-
-      if (data.wastage && Array.isArray(data.wastage)) {
-        if (JSON.stringify(data.wastage) !== JSON.stringify(dbCache.wastage)) {
-          dbCache.wastage = data.wastage;
-          changed = true;
-        }
-      }
-
-      if (data.storeSettings && JSON.stringify(data.storeSettings) !== JSON.stringify(dbCache.storeSettings)) { 
-        dbCache.storeSettings = data.storeSettings; 
-        changed = true; 
-      }
-
-      if (data.users && Array.isArray(data.users) && JSON.stringify(data.users) !== JSON.stringify(dbCache.users)) { 
-        dbCache.users = data.users; 
-        changed = true; 
-      }
-
-      if (changed) {
-        notifyDbChanges();
-      }
+    } catch (err) {
+      console.warn("Backend sync failed:", err);
+    } finally {
+      syncPromise = null;
     }
-  } catch (err) {
-    console.warn("Backend sync failed:", err);
-  }
+  })();
+
+  return syncPromise;
 }
 
 // Push local state update asynchronously to Firebase Firestore
@@ -136,6 +152,9 @@ export async function pushToBackend(
   storeSettings?: any,
   users?: any[]
 ) {
+  if (!isInitialSyncDone) {
+    await syncWithBackend();
+  }
   let ing: Ingredient[] | undefined;
   let prod: Product[] | undefined;
   let sal: Sale[] | undefined;
