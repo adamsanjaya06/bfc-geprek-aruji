@@ -362,20 +362,22 @@ async function saveCollection(collectionName: string, items: any[]): Promise<voi
     // Clean deleted documents (only for collections that support deletion)
     const deletableCollections = ["products", "ingredients", "sales", "expenses", "wastage", "users"];
     if (deletableCollections.includes(collectionName)) {
-      for (const id of existingIds) {
-        if (!newIds.has(id)) {
-          await deleteDoc(doc(db, collectionName, id));
-        }
+      const deletePromises = existingIds
+        .filter(id => !newIds.has(id))
+        .map(id => deleteDoc(doc(db, collectionName, id)));
+      if (deletePromises.length > 0) {
+        await Promise.all(deletePromises);
       }
     }
 
-    // Set/upsert new documents with cleaned undefined fields
-    for (const item of items) {
-      if (!item.id) continue;
+    // Set/upsert new documents in parallel with cleaned undefined fields
+    const writePromises = items.map(item => {
+      if (!item.id) return Promise.resolve();
       const { id, ...data } = item;
       const cleanedData = cleanDataForFirestore(data);
-      await setDoc(doc(db, collectionName, String(id)), cleanedData);
-    }
+      return setDoc(doc(db, collectionName, String(id)), cleanedData);
+    });
+    await Promise.all(writePromises);
     logDb(`/* Firestore WRITE */ REPLACE INTO ${collectionName} (${items.length} records);`, true, Date.now() - startTime);
   } catch (err: any) {
     logDb(`/* Firestore Write Fail */ REPLACE INTO ${collectionName};`, false, Date.now() - startTime, err.message);
@@ -837,33 +839,17 @@ app.get("/api/sync/state", async (req, res) => {
 app.post("/api/sync/state", async (req, res) => {
   const { ingredients, products, sales, expenses, wastage, storeSettings, users } = req.body;
   try {
-    if (storeSettings) {
-      await saveStoreSettings(storeSettings);
-    }
+    const saveTasks: Promise<any>[] = [];
 
-    if (users) {
-      await saveCollection("users", users);
-    }
+    if (storeSettings) saveTasks.push(saveStoreSettings(storeSettings));
+    if (users && Array.isArray(users)) saveTasks.push(saveCollection("users", users));
+    if (ingredients && Array.isArray(ingredients)) saveTasks.push(saveCollection("ingredients", ingredients));
+    if (products && Array.isArray(products)) saveTasks.push(saveCollection("products", products));
+    if (sales && Array.isArray(sales)) saveTasks.push(saveCollection("sales", sales));
+    if (expenses && Array.isArray(expenses)) saveTasks.push(saveCollection("expenses", expenses));
+    if (wastage && Array.isArray(wastage)) saveTasks.push(saveCollection("wastage", wastage));
 
-    if (ingredients) {
-      await saveCollection("ingredients", ingredients);
-    }
-
-    if (products) {
-      await saveCollection("products", products);
-    }
-
-    if (sales) {
-      await saveCollection("sales", sales);
-    }
-
-    if (expenses) {
-      await saveCollection("expenses", expenses);
-    }
-
-    if (wastage) {
-      await saveCollection("wastage", wastage);
-    }
+    await Promise.all(saveTasks);
 
     // Immediately fetch and return the updated state from Firestore
     const state = await getFullDbState();

@@ -61,8 +61,8 @@ function notifyDbChanges() {
 
 // Periodic automatic sync with Firebase Firestore
 export async function syncWithBackend(): Promise<void> {
-  // If we have active pushes in the last 2 seconds, skip GET sync to avoid race conditions
-  if (activePushes > 0 && Date.now() - lastPushTime < 2000) {
+  // If we have active pushes or recent push in the last 4 seconds, skip GET sync to avoid race conditions
+  if (activePushes > 0 || Date.now() - lastPushTime < 4000) {
     return;
   }
 
@@ -178,18 +178,20 @@ export async function pushToBackend(
   activePushes++;
 
   try {
+    const payload = {
+      ingredients: dbCache.ingredients,
+      products: dbCache.products,
+      sales: dbCache.sales,
+      expenses: dbCache.expenses,
+      wastage: dbCache.wastage,
+      storeSettings: dbCache.storeSettings,
+      users: dbCache.users,
+    };
+
     const res = await fetch("/api/sync/state", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ingredients: ing,
-        products: prod,
-        sales: sal,
-        expenses: exp,
-        wastage: wast,
-        storeSettings: setts,
-        users: usrs,
-      }),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
       const data = await res.json();
@@ -232,6 +234,7 @@ export async function pushToBackend(
     console.warn("Backend state sync failed:", err);
   } finally {
     activePushes = Math.max(0, activePushes - 1);
+    lastPushTime = Date.now();
   }
 }
 
