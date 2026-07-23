@@ -178,15 +178,14 @@ export async function pushToBackend(
   activePushes++;
 
   try {
-    const payload = {
-      ingredients: dbCache.ingredients,
-      products: dbCache.products,
-      sales: dbCache.sales,
-      expenses: dbCache.expenses,
-      wastage: dbCache.wastage,
-      storeSettings: dbCache.storeSettings,
-      users: dbCache.users,
-    };
+    const payload: any = {};
+    if (ing !== undefined) payload.ingredients = ing;
+    if (prod !== undefined) payload.products = prod;
+    if (sal !== undefined) payload.sales = sal;
+    if (exp !== undefined) payload.expenses = exp;
+    if (wast !== undefined) payload.wastage = wast;
+    if (setts !== undefined) payload.storeSettings = setts;
+    if (usrs !== undefined) payload.users = usrs;
 
     const res = await fetch("/api/sync/state", {
       method: "POST",

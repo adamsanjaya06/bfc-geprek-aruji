@@ -41,36 +41,12 @@
       "cost": 13000
     },
     {
-      "id": "ing-6",
-      "name": "Cup Gelas + Sedotan",
-      "stock": 250,
-      "unit": "pcs",
-      "minStock": 30,
-      "cost": 500
-    },
-    {
-      "id": "ing-7",
-      "name": "Es Batu Kristal",
-      "stock": 45,
-      "unit": "kg",
-      "minStock": 10,
-      "cost": 2000
-    },
-    {
-      "id": "ing-8",
-      "name": "Jeruk Peras Segar",
-      "stock": 12,
-      "unit": "kg",
-      "minStock": 3,
-      "cost": 12000
-    },
-    {
-      "id": "ing-9",
-      "name": "Kentang Beku Slices",
-      "stock": 15,
-      "unit": "kg",
-      "minStock": 4,
-      "cost": 22000
+      "id": "ing-new-1784804348696",
+      "name": "Saus Samyang Pedas",
+      "stock": 10,
+      "unit": "botol",
+      "minStock": 2,
+      "cost": 25000
     }
   ],
   "products": [
@@ -194,8 +170,100 @@
     }
   ],
   "sales": [],
-  "expenses": [],
-  "wastage": [],
+  "expenses": [
+    {
+      "id": "exp-1",
+      "date": "2026-07-18T10:58:47.305Z",
+      "description": "Sewa Ruko Bulanan",
+      "category": "lainnya",
+      "amount": 1500000
+    },
+    {
+      "id": "exp-2",
+      "date": "2026-07-19T10:58:47.305Z",
+      "description": "Pembayaran Listrik Toko Bulanan",
+      "category": "listrik",
+      "amount": 1200000
+    },
+    {
+      "id": "exp-3",
+      "date": "2026-07-20T10:58:47.305Z",
+      "description": "Pengisian Tabung Gas 12kg",
+      "category": "gas",
+      "amount": 210000
+    },
+    {
+      "id": "exp-4",
+      "date": "2026-07-21T10:58:47.305Z",
+      "description": "Gaji Karyawan Shift Pagi",
+      "category": "gaji",
+      "amount": 1500000
+    },
+    {
+      "id": "exp-5",
+      "date": "2026-07-22T10:58:47.305Z",
+      "description": "Biaya Kebersihan Lingkungan RW",
+      "category": "lainnya",
+      "amount": 150000
+    }
+  ],
+  "wastage": [
+    {
+      "id": "wast-1",
+      "date": "2026-07-18T10:58:47.305Z",
+      "ingredientId": "ing-1",
+      "ingredientName": "Ayam Potong Segar",
+      "quantity": 5,
+      "unit": "pcs",
+      "costPerUnit": 6000,
+      "totalCost": 30000,
+      "reason": "Ayam lewat hari / basi"
+    },
+    {
+      "id": "wast-2",
+      "date": "2026-07-19T10:58:47.305Z",
+      "ingredientId": "ing-2",
+      "ingredientName": "Tepung Bumbu Krispi",
+      "quantity": 1,
+      "unit": "kg",
+      "costPerUnit": 15000,
+      "totalCost": 15000,
+      "reason": "Tepung basah terkena air"
+    },
+    {
+      "id": "wast-3",
+      "date": "2026-07-20T10:58:47.305Z",
+      "ingredientId": "ing-3",
+      "ingredientName": "Minyak Goreng Sawit",
+      "quantity": 2,
+      "unit": "liter",
+      "costPerUnit": 14000,
+      "totalCost": 28000,
+      "reason": "Tumpah saat pengisian wajan"
+    },
+    {
+      "id": "wast-4",
+      "date": "2026-07-21T10:58:47.305Z",
+      "ingredientId": "ing-4",
+      "ingredientName": "Cabe Rawit Merah",
+      "quantity": 0.5,
+      "unit": "kg",
+      "costPerUnit": 40000,
+      "totalCost": 20000,
+      "reason": "Cabe membusuk"
+    },
+    {
+      "id": "wast-5",
+      "date": "2026-07-22T10:58:47.305Z",
+      "ingredientId": "ing-5",
+      "ingredientName": "Beras Jasmine Super",
+      "quantity": 1,
+      "unit": "kg",
+      "costPerUnit": 13000,
+      "totalCost": 13000,
+      "reason": "Beras berkutu"
+    }
+  ],
   "storeSettings": {
     "storeName": "BFC Geprek Aruji",
     "storeTagline": "Berkah Fried Chicken",
