@@ -321,11 +321,35 @@ async function fetchCollection(collectionName: string): Promise<any[]> {
 
 async function saveCollection(collectionName: string, items: any[]): Promise<void> {
   const startTime = Date.now();
-  if (!db) {
-    logDb(`/* Firestore Write Fallback */ REPLACE INTO ${collectionName};`, true, 1);
+  
+  function cleanDataForFirestore(obj: any): any {
+    if (obj === null || obj === undefined) return null;
+    if (Array.isArray(obj)) {
+      return obj.map(cleanDataForFirestore);
+    }
+    if (typeof obj === "object" && !(obj instanceof Date)) {
+      const cleaned: any = {};
+      for (const key of Object.keys(obj)) {
+        if (obj[key] !== undefined) {
+          cleaned[key] = cleanDataForFirestore(obj[key]);
+        }
+      }
+      return cleaned;
+    }
+    return obj;
+  }
+
+  // Always keep fallback DB updated in sync
+  try {
     const localDb = loadFallbackDb();
     (localDb as any)[collectionName] = items;
     saveFallbackDb(localDb);
+  } catch (err: any) {
+    console.warn(`Failed updating fallback local DB for ${collectionName}:`, err.message);
+  }
+
+  if (!db) {
+    logDb(`/* Firestore Write Fallback */ REPLACE INTO ${collectionName};`, true, 1);
     return;
   }
   try {
@@ -344,19 +368,17 @@ async function saveCollection(collectionName: string, items: any[]): Promise<voi
       }
     }
 
-    // Set/upsert new documents
+    // Set/upsert new documents with cleaned undefined fields
     for (const item of items) {
       if (!item.id) continue;
       const { id, ...data } = item;
-      await setDoc(doc(db, collectionName, String(id)), data);
+      const cleanedData = cleanDataForFirestore(data);
+      await setDoc(doc(db, collectionName, String(id)), cleanedData);
     }
     logDb(`/* Firestore WRITE */ REPLACE INTO ${collectionName} (${items.length} records);`, true, Date.now() - startTime);
   } catch (err: any) {
     logDb(`/* Firestore Write Fail */ REPLACE INTO ${collectionName};`, false, Date.now() - startTime, err.message);
-    console.warn(`Firestore write failed for ${collectionName}, writing to local fallback:`, err.message);
-    const localDb = loadFallbackDb();
-    (localDb as any)[collectionName] = items;
-    saveFallbackDb(localDb);
+    console.error(`Firestore write failed for ${collectionName}:`, err.message);
   }
 }
 
@@ -865,32 +887,8 @@ async function startServer() {
   try {
     await runSqlMigrations();
     console.log("Firebase migration completed on startup.");
-
-    // Detect and auto-clean any old mock transactions (Budi, Siti, Andi) from Firestore or Fallback DB
-    let containsMock = false;
-    if (db) {
-      try {
-        const salesSnap = await getDocs(collection(db, "sales"));
-        containsMock = salesSnap.docs.some(docSnap => {
-          const cashier = docSnap.data().cashierName;
-          return cashier === "Budi" || cashier === "Siti" || cashier === "Andi";
-        });
-      } catch (err: any) {
-        console.warn("Could not check Firestore for mock sales during boot:", err.message);
-      }
-    } else {
-      const localDb = loadFallbackDb();
-      if (localDb.sales && Array.isArray(localDb.sales)) {
-        containsMock = localDb.sales.some((s: any) => s.cashierName === "Budi" || s.cashierName === "Siti" || s.cashierName === "Andi");
-      }
-    }
-
-    if (containsMock) {
-      console.log("Old mock cashier data detected. Automatically resetting database transactions to pristine state...");
-      await runSqlReset();
-    }
   } catch (err: any) {
-    console.error("Auto-migration or auto-cleanup on startup failed:", err.message);
+    console.error("Auto-migration on startup failed:", err.message);
   }
 
   if (process.env.NODE_ENV !== "production") {

@@ -84,7 +84,7 @@ export async function syncWithBackend(): Promise<void> {
 
 // Push local state update asynchronously to Firebase Firestore
 export async function pushToBackend(
-  ingredients?: Ingredient[],
+  ingredientsOrOptions?: Ingredient[] | { ingredients?: Ingredient[]; products?: Product[]; sales?: Sale[]; expenses?: Expense[]; wastage?: Wastage[]; storeSettings?: any; users?: any[] },
   products?: Product[],
   sales?: Sale[],
   expenses?: Expense[],
@@ -92,14 +92,40 @@ export async function pushToBackend(
   storeSettings?: any,
   users?: any[]
 ) {
+  let ing: Ingredient[] | undefined;
+  let prod: Product[] | undefined;
+  let sal: Sale[] | undefined;
+  let exp: Expense[] | undefined;
+  let wast: Wastage[] | undefined;
+  let setts: any;
+  let usrs: any[] | undefined;
+
+  if (ingredientsOrOptions && !Array.isArray(ingredientsOrOptions) && typeof ingredientsOrOptions === "object") {
+    ing = ingredientsOrOptions.ingredients;
+    prod = ingredientsOrOptions.products;
+    sal = ingredientsOrOptions.sales;
+    exp = ingredientsOrOptions.expenses;
+    wast = ingredientsOrOptions.wastage;
+    setts = ingredientsOrOptions.storeSettings;
+    usrs = ingredientsOrOptions.users;
+  } else {
+    ing = ingredientsOrOptions as Ingredient[] | undefined;
+    prod = products;
+    sal = sales;
+    exp = expenses;
+    wast = wastage;
+    setts = storeSettings;
+    usrs = users;
+  }
+
   // Optimistic update of the in-memory cache for ultra-responsive UI
-  if (ingredients) dbCache.ingredients = ingredients;
-  if (products) dbCache.products = products;
-  if (sales) dbCache.sales = sales;
-  if (expenses) dbCache.expenses = expenses;
-  if (wastage) dbCache.wastage = wastage;
-  if (storeSettings) dbCache.storeSettings = storeSettings;
-  if (users) dbCache.users = users;
+  if (ing) dbCache.ingredients = ing;
+  if (prod) dbCache.products = prod;
+  if (sal) dbCache.sales = sal;
+  if (exp) dbCache.expenses = exp;
+  if (wast) dbCache.wastage = wast;
+  if (setts) dbCache.storeSettings = setts;
+  if (usrs) dbCache.users = usrs;
 
   // Notify listeners immediately for optimistic response in UI
   notifyDbChanges();
@@ -111,7 +137,15 @@ export async function pushToBackend(
     const res = await fetch("/api/sync/state", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ingredients, products, sales, expenses, wastage, storeSettings, users }),
+      body: JSON.stringify({
+        ingredients: ing,
+        products: prod,
+        sales: sal,
+        expenses: exp,
+        wastage: wast,
+        storeSettings: setts,
+        users: usrs,
+      }),
     });
     if (res.ok) {
       const data = await res.json();
