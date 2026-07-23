@@ -369,7 +369,7 @@ export default function PosView({
                     {/* Thumbnail Image */}
                     <div className="relative w-full h-32 rounded-xl overflow-hidden bg-bento-light-yellow/30 border border-bento-border/40">
                       <img
-                        src={prod.image}
+                        src={prod.image || "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80"}
                         alt={prod.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         referrerPolicy="no-referrer"
@@ -465,7 +465,7 @@ export default function PosView({
               >
                 {/* Product Pic */}
                 <img
-                  src={item.product.image}
+                  src={item.product.image || "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80"}
                   alt={item.product.name}
                   className="w-10 h-10 object-cover rounded-lg border border-bento-border"
                   referrerPolicy="no-referrer"

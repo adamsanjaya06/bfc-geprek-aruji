@@ -215,7 +215,7 @@ export default function MenuView({
                     <td className="p-4 pl-6">
                       <div className="flex items-center gap-3">
                         <img
-                          src={prod.image}
+                          src={prod.image || "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80"}
                           alt={prod.name}
                           className="w-12 h-12 object-cover rounded-xl border border-bento-border shadow-xs"
                           referrerPolicy="no-referrer"

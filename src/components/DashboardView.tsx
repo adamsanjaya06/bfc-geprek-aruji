@@ -433,7 +433,7 @@ export default function DashboardView({
                     </span>
                     {/* Product Image */}
                     <img 
-                      src={item.image} 
+                      src={item.image || "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80"} 
                       alt={item.name} 
                       className="w-10 h-10 object-cover rounded-lg border border-bento-border"
                       referrerPolicy="no-referrer"

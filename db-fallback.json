@@ -55,6 +55,14 @@
       "unit": "botol",
       "minStock": 5,
       "cost": 12000
+    },
+    {
+      "id": "ing-persistent-1784805582289",
+      "name": "Bumbu Marinasi Rahasia",
+      "stock": 100,
+      "unit": "pack",
+      "minStock": 10,
+      "cost": 5000
     }
   ],
   "products": [
@@ -173,6 +181,20 @@
         {
           "ingredientId": "ing-5",
           "quantityNeeded": 0.08
+        }
+      ]
+    },
+    {
+      "id": "prod-test-1784805428795",
+      "name": "Ayam Geprek Spesial 1784805428795",
+      "category": "Paket Ayam",
+      "price": 25000,
+      "image": "",
+      "isAvailable": true,
+      "recipe": [
+        {
+          "ingredientId": "ing-1",
+          "quantityNeeded": 1
         }
       ]
     }

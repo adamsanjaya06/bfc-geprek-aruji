@@ -442,8 +442,17 @@ async function runSqlMigrations(): Promise<string> {
     return "Firebase tidak terinisialisasi. Penyimpanan lokal fallback aktif dan siap digunakan!";
   }
   try {
+    // Check if storeSettings exists as indicator that Firestore is already initialized
+    const docRef = doc(db, "storeSettings", "store");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return "Migrasi diabaikan: Database Firebase Firestore sudah terinisialisasi dan data tersimpan aman.";
+    }
+
     let seededCount = 0;
 
+    // First time setup only for fresh database:
     // 1. Users
     const usersList = await fetchCollection("users");
     if (usersList.length === 0) {
@@ -484,30 +493,19 @@ async function runSqlMigrations(): Promise<string> {
       seededCount++;
     }
 
-    // 7. Store Settings
-    try {
-      const docRef = doc(db, "storeSettings", "store");
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        await saveStoreSettings({
-          storeName: "BFC Geprek Aruji",
-          storeTagline: "Berkah Fried Chicken",
-          storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
-          storePhone: "0812-3456-7890"
-        });
-        seededCount++;
-      }
-    } catch (err: any) {
-      console.warn("Failed to check/save store settings:", err.message);
-    }
+    // 6. Store Settings
+    await saveStoreSettings({
+      storeName: "BFC Geprek Aruji",
+      storeTagline: "Berkah Fried Chicken",
+      storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
+      storePhone: "0812-3456-7890"
+    });
+    seededCount++;
 
-    if (seededCount > 0) {
-      return `Migrasi berhasil! Database terintegrasi Firebase Firestore telah di-seed dengan sukses (${seededCount} bagian diisi baru).`;
-    }
-    return "Migrasi berhasil! Struktur database Firebase Firestore telah siap dan sinkron.";
+    return `Migrasi awal berhasil! Database terintegrasi Firebase Firestore telah di-seed pertama kali (${seededCount} bagian diisi baru).`;
   } catch (err: any) {
     console.error("Firebase seeding error:", err.message);
-    return `Migrasi parsial berhasil. Error detail: ${err.message}`;
+    return `Migrasi awal gagal/parsial. Error detail: ${err.message}`;
   }
 }
 
@@ -832,7 +830,7 @@ app.get("/api/sync/state", async (req, res) => {
   } catch (err: any) {
     console.error("Failed to read state from Firestore:", err.message);
     const fallbackDb = loadFallbackDb();
-    res.json(fallbackDb);
+    res.json({ ...fallbackDb, fallback: true });
   }
 });
 

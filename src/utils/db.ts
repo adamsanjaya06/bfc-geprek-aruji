@@ -79,6 +79,10 @@ export async function syncWithBackend(): Promise<void> {
       const res = await fetch("/api/sync/state");
       if (res.ok) {
         const data = await res.json();
+        if (data.fallback && isInitialSyncDone) {
+          console.warn("Server returned fallback state; skipping sync to protect live data.");
+          return;
+        }
         let changed = false;
 
         if (data.ingredients && Array.isArray(data.ingredients)) {
@@ -213,6 +217,10 @@ export async function pushToBackend(
     });
     if (res.ok) {
       const data = await res.json();
+      if (data.fallback) {
+        console.warn("Server returned fallback state; keeping optimistic client state.");
+        return;
+      }
       let changed = false;
 
       if (data.products && Array.isArray(data.products) && JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
