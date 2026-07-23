@@ -43,12 +43,15 @@ export default function App() {
     return null;
   });
 
-  // Initialize and load database states
-  const [products, setProducts] = useState<Product[]>([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [wastages, setWastages] = useState<Wastage[]>([]);
+  // Initialize and load database states immediately from cache
+  const [products, setProducts] = useState<Product[]>(() => {
+    initializeDb();
+    return getProducts();
+  });
+  const [ingredients, setIngredients] = useState<Ingredient[]>(() => getIngredients());
+  const [sales, setSales] = useState<Sale[]>(() => getSales());
+  const [expenses, setExpenses] = useState<Expense[]>(() => getExpenses());
+  const [wastages, setWastages] = useState<Wastage[]>(() => getWastage());
   
   // Navigation states with localStorage persistence
   const [currentTab, setCurrentTabState] = useState<string>(() => {

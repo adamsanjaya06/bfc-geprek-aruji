@@ -1,0 +1,228 @@
+{
+  "ingredients": [
+    {
+      "id": "ing-1",
+      "name": "Ayam Potong Segar",
+      "stock": 150,
+      "unit": "pcs",
+      "minStock": 25,
+      "cost": 6000
+    },
+    {
+      "id": "ing-2",
+      "name": "Tepung Bumbu Krispi",
+      "stock": 25,
+      "unit": "kg",
+      "minStock": 5,
+      "cost": 15000
+    },
+    {
+      "id": "ing-3",
+      "name": "Minyak Goreng Sawit",
+      "stock": 40,
+      "unit": "liter",
+      "minStock": 8,
+      "cost": 14000
+    },
+    {
+      "id": "ing-4",
+      "name": "Cabe Rawit Merah",
+      "stock": 5.5,
+      "unit": "kg",
+      "minStock": 1.5,
+      "cost": 40000
+    },
+    {
+      "id": "ing-5",
+      "name": "Beras Jasmine Super",
+      "stock": 30,
+      "unit": "kg",
+      "minStock": 8,
+      "cost": 13000
+    },
+    {
+      "id": "ing-6",
+      "name": "Cup Gelas + Sedotan",
+      "stock": 250,
+      "unit": "pcs",
+      "minStock": 30,
+      "cost": 500
+    },
+    {
+      "id": "ing-7",
+      "name": "Es Batu Kristal",
+      "stock": 45,
+      "unit": "kg",
+      "minStock": 10,
+      "cost": 2000
+    },
+    {
+      "id": "ing-8",
+      "name": "Jeruk Peras Segar",
+      "stock": 12,
+      "unit": "kg",
+      "minStock": 3,
+      "cost": 12000
+    },
+    {
+      "id": "ing-9",
+      "name": "Kentang Beku Slices",
+      "stock": 15,
+      "unit": "kg",
+      "minStock": 4,
+      "cost": 22000
+    }
+  ],
+  "products": [
+    {
+      "id": "prod-1",
+      "name": "Paket Geprek Hot",
+      "category": "Paket Ayam",
+      "price": 22000,
+      "image": "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&q=80&w=400",
+      "isAvailable": true,
+      "recipe": [
+        {
+          "ingredientId": "ing-1",
+          "quantityNeeded": 1
+        },
+        {
+          "ingredientId": "ing-2",
+          "quantityNeeded": 0.05
+        },
+        {
+          "ingredientId": "ing-3",
+          "quantityNeeded": 0.1
+        },
+        {
+          "ingredientId": "ing-4",
+          "quantityNeeded": 0.02
+        },
+        {
+          "ingredientId": "ing-5",
+          "quantityNeeded": 0.08
+        }
+      ]
+    },
+    {
+      "id": "prod-2",
+      "name": "Paket Mantap Dada",
+      "category": "Paket Ayam",
+      "price": 20000,
+      "image": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80&w=400",
+      "isAvailable": true,
+      "recipe": [
+        {
+          "ingredientId": "ing-1",
+          "quantityNeeded": 1
+        },
+        {
+          "ingredientId": "ing-2",
+          "quantityNeeded": 0.05
+        },
+        {
+          "ingredientId": "ing-3",
+          "quantityNeeded": 0.1
+        },
+        {
+          "ingredientId": "ing-5",
+          "quantityNeeded": 0.08
+        }
+      ]
+    },
+    {
+      "id": "prod-3",
+      "name": "Paket Hemat Sayap",
+      "category": "Paket Ayam",
+      "price": 17000,
+      "image": "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&q=80&w=400",
+      "isAvailable": true,
+      "recipe": [
+        {
+          "ingredientId": "ing-1",
+          "quantityNeeded": 1
+        },
+        {
+          "ingredientId": "ing-2",
+          "quantityNeeded": 0.05
+        },
+        {
+          "ingredientId": "ing-3",
+          "quantityNeeded": 0.1
+        },
+        {
+          "ingredientId": "ing-5",
+          "quantityNeeded": 0.08
+        }
+      ]
+    },
+    {
+      "id": "prod-4",
+      "name": "Ayam Dada Krispi",
+      "category": "Ala Carte",
+      "price": 12000,
+      "image": "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&q=80&w=400",
+      "isAvailable": true,
+      "recipe": [
+        {
+          "ingredientId": "ing-1",
+          "quantityNeeded": 1
+        },
+        {
+          "ingredientId": "ing-2",
+          "quantityNeeded": 0.05
+        },
+        {
+          "ingredientId": "ing-3",
+          "quantityNeeded": 0.1
+        }
+      ]
+    },
+    {
+      "id": "prod-5",
+      "name": "Nasi Putih Jasmine",
+      "category": "Ala Carte",
+      "price": 5000,
+      "image": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=400",
+      "isAvailable": true,
+      "recipe": [
+        {
+          "ingredientId": "ing-5",
+          "quantityNeeded": 0.08
+        }
+      ]
+    }
+  ],
+  "sales": [],
+  "expenses": [],
+  "wastage": [],
+  "storeSettings": {
+    "storeName": "BFC Geprek Aruji",
+    "storeTagline": "Berkah Fried Chicken",
+    "storeAddress": "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
+    "storePhone": "0812-3456-7890"
+  },
+  "users": [
+    {
+      "id": "user-1",
+      "username": "superadmin",
+      "password": "admin123",
+      "role": "superadmin",
+      "name": "Adam Superadmin"
+    },
+    {
+      "id": "user-2",
+      "username": "kasir",
+      "password": "kasir123",
+      "role": "kasir",
+      "name": "Siti Kasir Utama"
+    },
+    {
+      "id": "user-3",
+      "username": "owner",
+      "password": "owner123",
+      "role": "owner",
+      "name": "Pak Hartono Owner"
+    }
+  ]
+}
