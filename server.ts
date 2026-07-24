@@ -357,9 +357,25 @@ async function saveCollection(collectionName: string, items: any[]): Promise<voi
     const colRef = collection(db, collectionName);
     const snapshot = await getDocs(colRef);
     const existingIds = snapshot.docs.map(doc => doc.id);
-    const newIds = new Set(items.map(item => String(item.id)));
 
-    // Clean deleted documents (only for collections that support deletion)
+    // Normalize valid items with string IDs
+    const validItems = (Array.isArray(items) ? items : []).map((item, index) => {
+      const id = item && item.id ? String(item.id) : `${collectionName}-${Date.now()}-${index}`;
+      return { ...item, id };
+    });
+
+    const newIds = new Set(validItems.map(item => item.id));
+
+    // 1. Write/Upsert new and modified documents FIRST so data is never zeroed
+    const savePromises = validItems.map(item => {
+      const docId = String(item.id);
+      const cleanItem = cleanDataForFirestore(item);
+      delete cleanItem.id;
+      return setDoc(doc(db, collectionName, docId), cleanItem);
+    });
+    await Promise.all(savePromises);
+
+    // 2. Clean deleted documents (only for collections that support deletion)
     const deletableCollections = ["products", "ingredients", "sales", "expenses", "wastage", "users"];
     if (deletableCollections.includes(collectionName)) {
       const deletePromises = existingIds
@@ -370,15 +386,7 @@ async function saveCollection(collectionName: string, items: any[]): Promise<voi
       }
     }
 
-    // Set/upsert new documents in parallel with cleaned undefined fields
-    const writePromises = items.map(item => {
-      if (!item.id) return Promise.resolve();
-      const { id, ...data } = item;
-      const cleanedData = cleanDataForFirestore(data);
-      return setDoc(doc(db, collectionName, String(id)), cleanedData);
-    });
-    await Promise.all(writePromises);
-    logDb(`/* Firestore WRITE */ REPLACE INTO ${collectionName} (${items.length} records);`, true, Date.now() - startTime);
+    logDb(`/* Firestore WRITE */ REPLACE INTO ${collectionName} (${validItems.length} records);`, true, Date.now() - startTime);
   } catch (err: any) {
     logDb(`/* Firestore Write Fail */ REPLACE INTO ${collectionName};`, false, Date.now() - startTime, err.message);
     console.error(`Firestore write failed for ${collectionName}:`, err.message);
@@ -740,7 +748,7 @@ app.post("/api/auth/login", async (req, res) => {
 // Sync State API endpoints
 // Helper to read and format all collections from Firebase Firestore
 async function getFullDbState(): Promise<any> {
-  let [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
+  const [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
     fetchCollection("ingredients"),
     fetchCollection("products"),
     fetchCollection("sales"),
@@ -749,25 +757,6 @@ async function getFullDbState(): Promise<any> {
     fetchCollection("users"),
     fetchStoreSettings(),
   ]);
-
-  // Ensure core collections are never empty
-  if (ingredients.length === 0) {
-    await saveCollection("ingredients", DEFAULT_INGREDIENTS);
-    ingredients = await fetchCollection("ingredients");
-  }
-  if (products.length === 0) {
-    await saveCollection("products", DEFAULT_PRODUCTS);
-    products = await fetchCollection("products");
-  }
-  if (users.length === 0) {
-    const PRESET_USERS = [
-      { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin", name: "Adam Superadmin" },
-      { id: "user-2", username: "kasir", password: "kasir123", role: "kasir", name: "Siti Kasir Utama" },
-      { id: "user-3", username: "owner", password: "owner123", role: "owner", name: "Pak Hartono Owner" }
-    ];
-    await saveCollection("users", PRESET_USERS);
-    users = await fetchCollection("users");
-  }
 
   const formattedIngredients = ingredients.map(ing => ({
     id: ing.id,

@@ -39,30 +39,6 @@
       "unit": "kg",
       "minStock": 8,
       "cost": 13000
-    },
-    {
-      "id": "ing-new-1784804348696",
-      "name": "Saus Samyang Pedas",
-      "stock": 10,
-      "unit": "botol",
-      "minStock": 2,
-      "cost": 25000
-    },
-    {
-      "id": "ing-test-persistent-1784804923019",
-      "name": "Saus Sambal Extra Pedas",
-      "stock": 50,
-      "unit": "botol",
-      "minStock": 5,
-      "cost": 12000
-    },
-    {
-      "id": "ing-persistent-1784805582289",
-      "name": "Bumbu Marinasi Rahasia",
-      "stock": 100,
-      "unit": "pack",
-      "minStock": 10,
-      "cost": 5000
     }
   ],
   "products": [
@@ -183,58 +159,44 @@
           "quantityNeeded": 0.08
         }
       ]
-    },
-    {
-      "id": "prod-test-1784805428795",
-      "name": "Ayam Geprek Spesial 1784805428795",
-      "category": "Paket Ayam",
-      "price": 25000,
-      "image": "",
-      "isAvailable": true,
-      "recipe": [
-        {
-          "ingredientId": "ing-1",
-          "quantityNeeded": 1
-        }
-      ]
     }
   ],
   "sales": [],
   "expenses": [
     {
-      "id": "exp-1",
-      "date": "2026-07-18T10:58:47.305Z",
-      "description": "Sewa Ruko Bulanan",
+      "id": "exp-5",
+      "date": "2026-07-22T11:23:48.782Z",
+      "description": "Biaya Kebersihan Lingkungan RW",
       "category": "lainnya",
-      "amount": 1500000
-    },
-    {
-      "id": "exp-2",
-      "date": "2026-07-19T10:58:47.305Z",
-      "description": "Pembayaran Listrik Toko Bulanan",
-      "category": "listrik",
-      "amount": 1200000
-    },
-    {
-      "id": "exp-3",
-      "date": "2026-07-20T10:58:47.305Z",
-      "description": "Pengisian Tabung Gas 12kg",
-      "category": "gas",
-      "amount": 210000
+      "amount": 150000
     },
     {
       "id": "exp-4",
-      "date": "2026-07-21T10:58:47.305Z",
+      "date": "2026-07-21T11:23:48.782Z",
       "description": "Gaji Karyawan Shift Pagi",
       "category": "gaji",
       "amount": 1500000
     },
     {
-      "id": "exp-5",
-      "date": "2026-07-22T10:58:47.305Z",
-      "description": "Biaya Kebersihan Lingkungan RW",
+      "id": "exp-3",
+      "date": "2026-07-20T11:23:48.782Z",
+      "description": "Pengisian Tabung Gas 12kg",
+      "category": "gas",
+      "amount": 210000
+    },
+    {
+      "id": "exp-2",
+      "date": "2026-07-19T11:23:48.782Z",
+      "description": "Pembayaran Listrik Toko Bulanan",
+      "category": "listrik",
+      "amount": 1200000
+    },
+    {
+      "id": "exp-1",
+      "date": "2026-07-18T11:23:48.782Z",
+      "description": "Sewa Ruko Bulanan",
       "category": "lainnya",
-      "amount": 150000
+      "amount": 1500000
     }
   ],
   "wastage": [
