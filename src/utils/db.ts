@@ -4,6 +4,10 @@
  */
 
 import { Product, Ingredient, Sale, CartItem, Expense, Wastage, User } from "../types";
+import rawFirebaseConfig from "../../firebase-applet-config.json";
+
+const firebaseConfig = rawFirebaseConfig as any;
+const firestoreRestUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/app_state/main_store?key=${firebaseConfig.apiKey}`;
 
 export interface StoreSettings {
   storeName: string;
@@ -76,9 +80,72 @@ export async function syncWithBackend(): Promise<void> {
 
   syncPromise = (async () => {
     try {
-      const res = await fetch("/api/sync/state");
+      // 1. Direct Firestore REST sync (works everywhere on client-side, including Vercel)
+      const res = await fetch(firestoreRestUrl);
       if (res.ok) {
-        const data = await res.json();
+        const docData = await res.json();
+        if (docData && docData.fields && docData.fields.jsonState && docData.fields.jsonState.stringValue) {
+          const data = JSON.parse(docData.fields.jsonState.stringValue);
+          let changed = false;
+
+          if (data.ingredients && Array.isArray(data.ingredients)) {
+            if (JSON.stringify(data.ingredients) !== JSON.stringify(dbCache.ingredients)) {
+              dbCache.ingredients = data.ingredients;
+              changed = true;
+            }
+          }
+
+          if (data.products && Array.isArray(data.products)) {
+            if (JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
+              dbCache.products = data.products;
+              changed = true;
+            }
+          }
+
+          if (data.sales && Array.isArray(data.sales)) {
+            if (JSON.stringify(data.sales) !== JSON.stringify(dbCache.sales)) {
+              dbCache.sales = data.sales;
+              changed = true;
+            }
+          }
+
+          if (data.expenses && Array.isArray(data.expenses)) {
+            if (JSON.stringify(data.expenses) !== JSON.stringify(dbCache.expenses)) {
+              dbCache.expenses = data.expenses;
+              changed = true;
+            }
+          }
+
+          if (data.wastage && Array.isArray(data.wastage)) {
+            if (JSON.stringify(data.wastage) !== JSON.stringify(dbCache.wastage)) {
+              dbCache.wastage = data.wastage;
+              changed = true;
+            }
+          }
+
+          if (data.storeSettings && JSON.stringify(data.storeSettings) !== JSON.stringify(dbCache.storeSettings)) { 
+            dbCache.storeSettings = data.storeSettings; 
+            changed = true; 
+          }
+
+          if (data.users && Array.isArray(data.users) && JSON.stringify(data.users) !== JSON.stringify(dbCache.users)) { 
+            dbCache.users = data.users; 
+            changed = true; 
+          }
+
+          isInitialSyncDone = true;
+
+          if (changed) {
+            notifyDbChanges();
+          }
+          return;
+        }
+      }
+
+      // 2. Fallback to /api/sync/state
+      const apiRes = await fetch("/api/sync/state");
+      if (apiRes.ok) {
+        const data = await apiRes.json();
         if (data.fallback && isInitialSyncDone) {
           console.warn("Server returned fallback state; skipping sync to protect live data.");
           return;
@@ -91,40 +158,34 @@ export async function syncWithBackend(): Promise<void> {
             changed = true;
           }
         }
-
         if (data.products && Array.isArray(data.products)) {
           if (JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
             dbCache.products = data.products;
             changed = true;
           }
         }
-
         if (data.sales && Array.isArray(data.sales)) {
           if (JSON.stringify(data.sales) !== JSON.stringify(dbCache.sales)) {
             dbCache.sales = data.sales;
             changed = true;
           }
         }
-
         if (data.expenses && Array.isArray(data.expenses)) {
           if (JSON.stringify(data.expenses) !== JSON.stringify(dbCache.expenses)) {
             dbCache.expenses = data.expenses;
             changed = true;
           }
         }
-
         if (data.wastage && Array.isArray(data.wastage)) {
           if (JSON.stringify(data.wastage) !== JSON.stringify(dbCache.wastage)) {
             dbCache.wastage = data.wastage;
             changed = true;
           }
         }
-
         if (data.storeSettings && JSON.stringify(data.storeSettings) !== JSON.stringify(dbCache.storeSettings)) { 
           dbCache.storeSettings = data.storeSettings; 
           changed = true; 
         }
-
         if (data.users && Array.isArray(data.users) && JSON.stringify(data.users) !== JSON.stringify(dbCache.users)) { 
           dbCache.users = data.users; 
           changed = true; 
@@ -201,61 +262,38 @@ export async function pushToBackend(
   activePushes++;
 
   try {
-    const payload: any = {};
-    if (ing !== undefined) payload.ingredients = ing;
-    if (prod !== undefined) payload.products = prod;
-    if (sal !== undefined) payload.sales = sal;
-    if (exp !== undefined) payload.expenses = exp;
-    if (wast !== undefined) payload.wastage = wast;
-    if (setts !== undefined) payload.storeSettings = setts;
-    if (usrs !== undefined) payload.users = usrs;
+    const fullState = {
+      ingredients: dbCache.ingredients,
+      products: dbCache.products,
+      sales: dbCache.sales,
+      expenses: dbCache.expenses,
+      wastage: dbCache.wastage,
+      storeSettings: dbCache.storeSettings,
+      users: dbCache.users
+    };
 
-    const res = await fetch("/api/sync/state", {
+    // 1. Direct Firestore REST push
+    const patchUrl = `${firestoreRestUrl}?updateMask.fieldPaths=jsonState`;
+    const directRes = await fetch(patchUrl, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: {
+          jsonState: { stringValue: JSON.stringify(fullState) }
+        }
+      })
+    });
+
+    if (directRes.ok) {
+      return;
+    }
+
+    // 2. Fallback to /api/sync/state
+    await fetch("/api/sync/state", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(fullState),
     });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.fallback) {
-        console.warn("Server returned fallback state; keeping optimistic client state.");
-        return;
-      }
-      let changed = false;
-
-      if (data.products && Array.isArray(data.products) && JSON.stringify(data.products) !== JSON.stringify(dbCache.products)) {
-        dbCache.products = data.products;
-        changed = true;
-      }
-      if (data.ingredients && Array.isArray(data.ingredients) && JSON.stringify(data.ingredients) !== JSON.stringify(dbCache.ingredients)) {
-        dbCache.ingredients = data.ingredients;
-        changed = true;
-      }
-      if (data.sales && Array.isArray(data.sales) && JSON.stringify(data.sales) !== JSON.stringify(dbCache.sales)) {
-        dbCache.sales = data.sales;
-        changed = true;
-      }
-      if (data.expenses && Array.isArray(data.expenses) && JSON.stringify(data.expenses) !== JSON.stringify(dbCache.expenses)) {
-        dbCache.expenses = data.expenses;
-        changed = true;
-      }
-      if (data.wastage && Array.isArray(data.wastage) && JSON.stringify(data.wastage) !== JSON.stringify(dbCache.wastage)) {
-        dbCache.wastage = data.wastage;
-        changed = true;
-      }
-      if (data.storeSettings && JSON.stringify(data.storeSettings) !== JSON.stringify(dbCache.storeSettings)) {
-        dbCache.storeSettings = data.storeSettings;
-        changed = true;
-      }
-      if (data.users && Array.isArray(data.users) && JSON.stringify(data.users) !== JSON.stringify(dbCache.users)) {
-        dbCache.users = data.users;
-        changed = true;
-      }
-
-      if (changed) {
-        notifyDbChanges();
-      }
-    }
   } catch (err) {
     console.warn("Backend state sync failed:", err);
   } finally {
