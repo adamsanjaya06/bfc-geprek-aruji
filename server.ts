@@ -442,17 +442,9 @@ async function runSqlMigrations(): Promise<string> {
     return "Firebase tidak terinisialisasi. Penyimpanan lokal fallback aktif dan siap digunakan!";
   }
   try {
-    // Check if storeSettings exists as indicator that Firestore is already initialized
-    const docRef = doc(db, "storeSettings", "store");
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      return "Migrasi diabaikan: Database Firebase Firestore sudah terinisialisasi dan data tersimpan aman.";
-    }
-
     let seededCount = 0;
 
-    // First time setup only for fresh database:
+    // First time setup check per collection for fresh database:
     // 1. Users
     const usersList = await fetchCollection("users");
     if (usersList.length === 0) {
@@ -494,15 +486,22 @@ async function runSqlMigrations(): Promise<string> {
     }
 
     // 6. Store Settings
-    await saveStoreSettings({
-      storeName: "BFC Geprek Aruji",
-      storeTagline: "Berkah Fried Chicken",
-      storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
-      storePhone: "0812-3456-7890"
-    });
-    seededCount++;
+    const storeSettingsDoc = await fetchStoreSettings();
+    if (!storeSettingsDoc || !storeSettingsDoc.storeName) {
+      await saveStoreSettings({
+        storeName: "BFC Geprek Aruji",
+        storeTagline: "Berkah Fried Chicken",
+        storeAddress: "Jl. Paha Dada Krispi No. 99, Jakarta Barat",
+        storePhone: "0812-3456-7890"
+      });
+      seededCount++;
+    }
 
-    return `Migrasi awal berhasil! Database terintegrasi Firebase Firestore telah di-seed pertama kali (${seededCount} bagian diisi baru).`;
+    if (seededCount > 0) {
+      return `Migrasi database Firebase Firestore berhasil: ${seededCount} koleksi di-seed data awal.`;
+    }
+
+    return "Migrasi diabaikan: Database Firebase Firestore sudah terinisialisasi dan data tersimpan aman.";
   } catch (err: any) {
     console.error("Firebase seeding error:", err.message);
     return `Migrasi awal gagal/parsial. Error detail: ${err.message}`;
@@ -741,7 +740,7 @@ app.post("/api/auth/login", async (req, res) => {
 // Sync State API endpoints
 // Helper to read and format all collections from Firebase Firestore
 async function getFullDbState(): Promise<any> {
-  const [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
+  let [ingredients, products, sales, expenses, wastage, users, storeSettings] = await Promise.all([
     fetchCollection("ingredients"),
     fetchCollection("products"),
     fetchCollection("sales"),
@@ -750,6 +749,25 @@ async function getFullDbState(): Promise<any> {
     fetchCollection("users"),
     fetchStoreSettings(),
   ]);
+
+  // Ensure core collections are never empty
+  if (ingredients.length === 0) {
+    await saveCollection("ingredients", DEFAULT_INGREDIENTS);
+    ingredients = await fetchCollection("ingredients");
+  }
+  if (products.length === 0) {
+    await saveCollection("products", DEFAULT_PRODUCTS);
+    products = await fetchCollection("products");
+  }
+  if (users.length === 0) {
+    const PRESET_USERS = [
+      { id: "user-1", username: "superadmin", password: "admin123", role: "superadmin", name: "Adam Superadmin" },
+      { id: "user-2", username: "kasir", password: "kasir123", role: "kasir", name: "Siti Kasir Utama" },
+      { id: "user-3", username: "owner", password: "owner123", role: "owner", name: "Pak Hartono Owner" }
+    ];
+    await saveCollection("users", PRESET_USERS);
+    users = await fetchCollection("users");
+  }
 
   const formattedIngredients = ingredients.map(ing => ({
     id: ing.id,
