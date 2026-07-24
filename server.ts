@@ -39,9 +39,11 @@ const DEFAULT_EXPENSES: any[] = [];
 const DEFAULT_WASTAGE: any[] = [];
 
 
+import rawFirebaseConfig from "./firebase-applet-config.json";
+
 // Read Firebase Config file
+let firebaseConfig: any = rawFirebaseConfig;
 const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
-let firebaseConfig: any = null;
 if (fs.existsSync(firebaseConfigPath)) {
   try {
     firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
