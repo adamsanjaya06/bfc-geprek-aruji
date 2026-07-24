@@ -3,28 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Settings, 
   UserPlus, 
   Trash2, 
   Store, 
   Users, 
-  ShieldCheck, 
   Sparkles, 
   AlertCircle,
   Smartphone,
   MapPin,
   Lock,
-  Tag,
-  Database,
-  RefreshCw,
-  CheckCircle
+  Tag
 } from "lucide-react";
 import { User } from "../types";
 import { 
-  pushToBackend, 
-  syncWithBackend, 
   getStoreSettings, 
   saveStoreSettings, 
   getStoredUsers, 
@@ -39,78 +33,6 @@ interface SettingsViewProps {
 export default function SettingsView({ onSettingsUpdate }: SettingsViewProps) {
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(getStoreSettings());
   const [users, setUsers] = useState<(User & { password?: string })[]>(getStoredUsers());
-
-  // Database status and states
-  const [dbStatus, setDbStatus] = useState<{ mode: string; success?: boolean; message?: string } | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [dbMessage, setDbMessage] = useState("");
-  const [dbError, setDbError] = useState("");
-
-  const checkDbStatus = async () => {
-    try {
-      const res = await fetch("/api/health");
-      if (res.ok) {
-        const data = await res.json();
-        setDbStatus(data);
-      }
-    } catch (e) {
-      setDbStatus({ mode: "offline" });
-    }
-  };
-
-  useEffect(() => {
-    checkDbStatus();
-  }, []);
-
-  const handleSyncNow = async () => {
-    setIsSyncing(true);
-    setDbMessage("");
-    setDbError("");
-    try {
-      await syncWithBackend();
-      if (onSettingsUpdate) {
-        onSettingsUpdate();
-      }
-      setDbMessage("Sinkronisasi data dari Firestore berhasil!");
-      setTimeout(() => setDbMessage(""), 3000);
-    } catch (err: any) {
-      setDbError(`Gagal melakukan sinkronisasi: ${err.message}`);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleResetDatabase = async () => {
-    if (!window.confirm("PERINGATAN: Tindakan ini akan menghapus semua data transaksi penjualan, biaya, bahan baku, dan menyetel ulang database Firestore Anda ke kondisi default awal.\n\nApakah Anda yakin ingin melakukan RESET TOTAL database?")) {
-      return;
-    }
-
-    setIsResetting(true);
-    setDbMessage("");
-    setDbError("");
-    try {
-      const res = await fetch("/api/db/reset", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        await syncWithBackend();
-        // Reload users from local storage
-        setUsers(getStoredUsers());
-        if (onSettingsUpdate) {
-          onSettingsUpdate();
-        }
-        setDbMessage("Database Firestore berhasil di-reset total ke kondisi default awal!");
-        alert("RESET SUKSES: Database Firestore berhasil dikosongkan dan di-seed ulang dengan data standard baru!");
-        setTimeout(() => setDbMessage(""), 4000);
-      } else {
-        setDbError(data.error || "Gagal melakukan reset database.");
-      }
-    } catch (err: any) {
-      setDbError(`Gagal mereset database: ${err.message}`);
-    } finally {
-      setIsResetting(false);
-    }
-  };
 
   // Form states for new user
   const [newUsername, setNewUsername] = useState("");
@@ -456,87 +378,6 @@ export default function SettingsView({ onSettingsUpdate }: SettingsViewProps) {
           </div>
         </div>
 
-      </div>
-
-      {/* Card 3: Database & Cloud Synchronization (Firestore) */}
-      <div className="bg-white p-6 rounded-2xl border border-bento-border shadow-md mt-6">
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-bento-border">
-          <div className="flex items-center gap-2">
-            <Database className="w-5 h-5 text-bento-orange" />
-            <div>
-              <h3 className="font-extrabold text-bento-header text-base">Sistem Database & Cloud Sinkronisasi</h3>
-              <p className="text-xs text-bento-text-muted">
-                Semua perangkat (tablet, HP, PC) secara otomatis terhubung ke server cloud Google Firebase Firestore.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <span className="text-xs font-bold text-bento-text-muted">Status Server:</span>
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1 border ${
-              dbStatus?.mode === "firebase"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                : "bg-amber-50 text-amber-700 border-amber-100"
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${dbStatus?.mode === "firebase" ? "bg-emerald-500" : "bg-amber-500"}`} />
-              {dbStatus?.mode === "firebase" ? "Firestore Cloud" : "Local Fallback"}
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <p className="text-xs text-bento-text leading-relaxed">
-              Jika data antar-perangkat Anda sempat tidak sinkron (misal karena jaringan), klik tombol <strong className="text-bento-orange">Sinkronisasi Sekarang</strong> untuk memaksa memuat ulang seluruh data terbaru yang valid langsung dari database cloud server.
-            </p>
-
-            <div className="flex flex-wrap gap-2 pt-2">
-              <button
-                id="sync-now-button"
-                onClick={handleSyncNow}
-                disabled={isSyncing || isResetting}
-                className="px-4 py-2.5 bg-bento-orange hover:bg-bento-orange-hover text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-                {isSyncing ? "Menyinkronkan..." : "Sinkronisasi Sekarang"}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-3 p-4 bg-red-50/40 border border-red-100 rounded-2xl">
-            <h4 className="text-xs font-black text-red-700 uppercase tracking-wider flex items-center gap-1.5">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-              Reset Ulang Database (Zona Bahaya)
-            </h4>
-            <p className="text-[11px] text-stone-600 leading-relaxed">
-              Apabila terdapat duplikasi data sisa uji coba atau Anda ingin menyetel ulang seluruh data transaksi penjualan, biaya operasional, dan sisa bahan baku menjadi kondisi default standard toko yang bersih dan sinkron, Anda dapat melakukan reset ulang di bawah ini.
-            </p>
-            <div className="pt-1">
-              <button
-                id="reset-db-button"
-                onClick={handleResetDatabase}
-                disabled={isSyncing || isResetting}
-                className="px-4 py-2 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50"
-              >
-                {isResetting ? "Mereset Database..." : "Reset Total & Re-seed Firestore"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {dbMessage && (
-          <div className="mt-4 p-3 bg-emerald-50 text-emerald-800 text-xs font-semibold rounded-xl border border-emerald-100 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{dbMessage}</span>
-          </div>
-        )}
-
-        {dbError && (
-          <div className="mt-4 p-3 bg-red-50 text-bento-red text-xs font-semibold rounded-xl border border-red-100 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-bento-red shrink-0" />
-            <span>{dbError}</span>
-          </div>
-        )}
       </div>
 
     </div>
